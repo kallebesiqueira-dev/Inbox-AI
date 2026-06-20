@@ -1,0 +1,23 @@
+{
+  "name": "inbox-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Inbox AI — Piattaforma SaaS B2B di automazione operativa e commerciale",
+  "author": "kallebesiqueira-dev",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n CLIENT,SERVER -c cyan,magenta \"npm:dev:client\" \"npm:dev:server\"",
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev",
+    "build": "npm --workspace client run build && npm --workspace server run build",
+    "lint": "npm run lint --workspaces --if-present",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

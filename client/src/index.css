@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Palette "Deep Petroleum" convertita in HSL
+       Background #F7F8F7 · Surface #E6ECEA · Primary #0F4C5C
+       Secondary #2F6B73 · Accent #D4A373 · Text #102A32 */
+    --background: 140 6% 97%;
+    --surface: 156 13% 91%;
+    --foreground: 194 52% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 194 52% 13%;
+
+    --primary: 193 72% 21%;
+    --primary-foreground: 140 6% 97%;
+
+    --secondary: 187 42% 32%;
+    --secondary-foreground: 140 6% 97%;
+
+    --accent: 32 52% 64%;
+    --accent-foreground: 194 52% 13%;
+
+    --muted: 156 13% 91%;
+    --muted-foreground: 194 18% 38%;
+
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 156 12% 85%;
+    --input: 156 12% 85%;
+    --ring: 193 72% 21%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
