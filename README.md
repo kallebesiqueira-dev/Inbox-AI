@@ -189,4 +189,4 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 ## Licenza
 
 Software **proprietario — tutti i diritti riservati**. Vedi [LICENSE](LICENSE).
-Proprietario: **kallebesiqueira-dev**.
+Proprietario: **Kallebe Gallo**.
