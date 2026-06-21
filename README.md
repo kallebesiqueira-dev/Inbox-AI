@@ -106,8 +106,7 @@ resa sobria e professionale.
 │       ├── services/      # logica di dominio + CRUD generico
 │       │   └── ai/        # layer di astrazione AI (vedi sotto)
 │       └── utils/         # firma token, CSRF
-├── render.yaml            # Configurazione deploy backend (Render)
-└── .env.example           # Variabili d'ambiente (un solo file per frontend + backend)
+└── render.yaml            # Configurazione deploy backend (Render)
 ```
 
 ## Astrazione AI
@@ -124,8 +123,8 @@ al client. Sostituire o aggiungere un provider significa implementare l'interfac
 # 1. Installa tutte le dipendenze (npm workspaces)
 npm install
 
-# 2. Crea il file .env nella radice
-cp .env.example .env
+# 2. Crea un file .env nella radice con le variabili elencate
+#    nella sezione "Variabili d'ambiente" (in demo bastano i default)
 
 # 3. Avvia frontend + backend insieme
 npm run dev
