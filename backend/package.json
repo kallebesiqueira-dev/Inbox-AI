@@ -1,7 +1,8 @@
 {
-  "name": "server",
+  "name": "backend",
   "version": "0.1.0",
   "private": true,
+  "author": "kallebesiqueira-dev",
   "type": "module",
   "main": "dist/index.js",
   "engines": {

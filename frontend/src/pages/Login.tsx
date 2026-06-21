@@ -34,16 +34,12 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardContent className="p-8">
-          <div className="mb-8 flex flex-col items-center gap-3 text-center">
-            <img src="/logo.jpeg" alt="Inbox AI" className="h-14 w-auto rounded" />
-            <div>
-              <h1 className="text-xl font-semibold text-primary">Inbox AI</h1>
-              <p className="text-sm text-muted-foreground">
-                {modalita === "login"
-                  ? "Accedi alla tua area operativa"
-                  : "Crea il tuo account aziendale"}
-              </p>
-            </div>
+          <div className="mb-8 flex flex-col items-center text-center">
+            <img
+              src="/icon.jpeg"
+              alt="Inbox AI"
+              className="h-40 w-auto rounded-2xl shadow-soft"
+            />
           </div>
 
           <form className="space-y-4" onSubmit={invia}>

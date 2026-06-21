@@ -2,7 +2,7 @@ services:
   - type: web
     name: inbox-ai-api
     runtime: node
-    rootDir: server
+    rootDir: backend
     plan: free
     buildCommand: npm install && npm run build
     startCommand: npm start
@@ -12,6 +12,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
+        sync: false
+      - key: VERCEL_PROJECT
         sync: false
       - key: MONGODB_URI
         sync: false

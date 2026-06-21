@@ -11,6 +11,9 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
   CLIENT_URL: z.string().default("http://localhost:5173"),
+  // Slug del progetto Vercel: se impostato, abilita le anteprime *.vercel.app
+  // del solo progetto (es. "inbox-ai"). Se assente, nessun wildcard è consentito.
+  VERCEL_PROJECT: z.string().optional(),
   MONGODB_URI: z.string().optional(),
   JWT_SECRET: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),

@@ -6,14 +6,14 @@
   "author": "kallebesiqueira-dev",
   "license": "UNLICENSED",
   "workspaces": [
-    "client",
-    "server"
+    "frontend",
+    "backend"
   ],
   "scripts": {
-    "dev": "concurrently -n CLIENT,SERVER -c cyan,magenta \"npm:dev:client\" \"npm:dev:server\"",
-    "dev:client": "npm --workspace client run dev",
-    "dev:server": "npm --workspace server run dev",
-    "build": "npm --workspace client run build && npm --workspace server run build",
+    "dev": "concurrently -n FRONTEND,BACKEND -c cyan,magenta \"npm:dev:frontend\" \"npm:dev:backend\"",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "build": "npm --workspace frontend run build && npm --workspace backend run build",
     "lint": "npm run lint --workspaces --if-present",
     "install:all": "npm install"
   },

@@ -45,9 +45,8 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
-          <div className="flex items-center gap-2">
-            <img src="/logo.jpeg" alt="Inbox AI" className="h-8 w-auto rounded" />
-            <span className="text-lg font-semibold text-primary">Inbox AI</span>
+          <div className="flex items-center">
+            <img src="/icon.jpeg" alt="Inbox AI" className="size-11 rounded-lg object-cover" />
           </div>
           <button
             onClick={onClose}

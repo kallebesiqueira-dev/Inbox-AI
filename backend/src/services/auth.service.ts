@@ -18,6 +18,10 @@ const dbAttivo = () => mongoose.connection.readyState === 1;
 // Archivio in memoria: modalità demo (sviluppo senza MongoDB).
 const demo: UtenteInterno[] = [];
 
+// Hash fittizio usato per uniformare i tempi del login quando l'utente non esiste,
+// evitando l'enumerazione degli account tramite analisi temporale.
+const HASH_FITTIZIO = bcrypt.hashSync("inbox-ai-timing-guard", 12);
+
 function pubblico(u: UtenteInterno): UtenteDTO {
   return { id: u.id, email: u.email, nome: u.nome };
 }
@@ -72,7 +76,11 @@ export async function autentica(
   password: string
 ): Promise<UtenteDTO | null> {
   const u = await trovaPerEmail(email);
-  if (!u?.passwordHash) return null;
+  if (!u?.passwordHash) {
+    // Confronto fittizio: stesso costo temporale del caso "utente esistente".
+    await bcrypt.compare(password, HASH_FITTIZIO);
+    return null;
+  }
   const ok = await bcrypt.compare(password, u.passwordHash);
   return ok ? pubblico(u) : null;
 }

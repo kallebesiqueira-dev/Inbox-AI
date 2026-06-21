@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="client/public/logo.jpeg" alt="Inbox AI" width="220" />
+  <img src="frontend/public/logo.jpeg" alt="Inbox AI" width="220" />
 
   # Inbox AI
 
@@ -91,14 +91,14 @@ resa sobria e professionale.
 
 ```
 .
-├── client/                # Frontend React + Vite
+├── frontend/              # Frontend React + Vite
 │   ├── src/
 │   │   ├── components/     # UI, layout, guardie di rotta
 │   │   ├── hooks/          # Hook TanStack Query (offerte, opportunità, approvazioni, auth)
 │   │   ├── lib/            # Client API (fetch + cookie + CSRF)
 │   │   └── pages/          # Dashboard, Inbox, Offerte, CRM, Approvazioni, Impostazioni, Login
 │   └── public/            # logo.jpeg, icon.jpeg
-├── server/                # Backend Node + Express
+├── backend/               # Backend Node + Express
 │   └── src/
 │       ├── config/        # env (validazione zod), connessione DB
 │       ├── controllers/   # auth, crud, ai
@@ -109,13 +109,13 @@ resa sobria e professionale.
 │       │   └── ai/        # layer di astrazione AI (vedi sotto)
 │       └── utils/         # firma token, CSRF
 ├── render.yaml            # Configurazione deploy backend (Render)
-└── .env.example           # Variabili d'ambiente (un solo file per client + server)
+└── .env.example           # Variabili d'ambiente (un solo file per frontend + backend)
 ```
 
 ## Astrazione AI
 
 Tutte le funzionalità AI passano attraverso un **layer di astrazione**
-(`server/src/services/ai/providers/AIProvider.ts`). Il frontend non conosce **mai** il
+(`backend/src/services/ai/providers/AIProvider.ts`). Il frontend non conosce **mai** il
 provider, il modello o il brand utilizzato: nessun nome di modello o fornitore è esposto
 al client. Sostituire o aggiungere un provider significa implementare l'interfaccia
 `AIProvider` senza toccare il resto dell'applicazione.
@@ -182,7 +182,7 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 
 ## Deploy
 
-- **Frontend → Vercel:** build statico da `client/` (`vercel.json` incluso).
+- **Frontend → Vercel:** build statico da `frontend/` (`vercel.json` incluso).
 - **Backend → Render:** configurazione in `render.yaml`. Impostare `MONGODB_URI`,
   `JWT_SECRET` e le variabili Google/AI come *secret* nel pannello Render.
 

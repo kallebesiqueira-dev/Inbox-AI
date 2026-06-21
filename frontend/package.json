@@ -1,7 +1,8 @@
 {
-  "name": "client",
+  "name": "frontend",
   "private": true,
   "version": "0.1.0",
+  "author": "kallebesiqueira-dev",
   "type": "module",
   "engines": {
     "node": ">=20"

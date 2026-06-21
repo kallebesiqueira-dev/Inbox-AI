@@ -25,8 +25,8 @@ export function NavLinks({ onNavigate }: NavLinksProps) {
             )
           }
         >
-          <Icon className="size-4" />
-          {label}
+          <Icon className="size-4 shrink-0" />
+          <span className="whitespace-nowrap">{label}</span>
         </NavLink>
       ))}
     </nav>

@@ -19,9 +19,9 @@ confinato lato server. I punti sotto sono miglioramenti, non difetti bloccanti �
 
 | #  | Severità | Tema | Stato |
 |----|----------|------|-------|
-| 1  | 🔴 Alta      | CORS: wildcard `*.vercel.app` con credenziali | **Da correggere** |
-| 2  | 🟠 Media     | Enumerazione account (registrazione/login)    | Da mitigare |
-| 3  | 🟠 Media     | Endpoint AI senza schema/limiti di lunghezza  | Da irrobustire |
+| 1  | 🔴 Alta      | CORS: wildcard `*.vercel.app` con credenziali | ✅ **Risolto** (2026-06-21) |
+| 2  | 🟠 Media     | Enumerazione account (registrazione/login)    | ✅ Mitigato (login) |
+| 3  | 🟠 Media     | Endpoint AI senza schema/limiti di lunghezza  | ✅ Risolto |
 | 4  | 🟡 Bassa     | Fallback `jwtSecret` a stringa vuota in prod  | Difesa in profondità |
 | 5  | 🟡 Bassa     | Logout non revoca il JWT lato server          | Accettabile, da documentare |
 | 6  | 🟡 Bassa     | Token CSRF longevo (7g), non legato alla sessione | Accettabile |
@@ -32,7 +32,7 @@ confinato lato server. I punti sotto sono miglioramenti, non difetti bloccanti �
 
 ## 1. 🔴 CORS: il wildcard `*.vercel.app` è un'origine attendibile con credenziali
 
-**File:** `server/src/index.ts:30` — `if (consentite.includes(origin) || /\.vercel\.app$/.test(host))`
+**File:** `backend/src/index.ts:30` — `if (consentite.includes(origin) || /\.vercel\.app$/.test(host))`
 
 La regex `/\.vercel\.app$/` accetta **qualunque** sottodominio di `vercel.app`, non solo le
 anteprime di questo progetto. Combinata con `credentials: true` e i cookie di sessione
@@ -51,13 +51,18 @@ if (consentite.includes(origin) || PREVIEW.test(host)) {
 ```
 
 In alternativa, eliminare del tutto il wildcard e gestire ogni dominio di anteprima tramite
-`CLIENT_URL` (lista separata da virgole). **Non** applicata automaticamente perché cambia il
-comportamento di produzione: va validata contro lo slug Vercel reale per non rompere le
-anteprime legittime.
+`CLIENT_URL` (lista separata da virgole).
+
+> ✅ **Risolto (2026-06-21):** il wildcard generico è stato rimosso. Le anteprime Vercel sono
+> ora abilitate **solo** se la variabile `VERCEL_PROJECT` è configurata, e limitate ai
+> sottodomini del progetto (`^<slug>[a-z0-9-]*\.vercel\.app$`, slug con escape regex). Senza
+> quella variabile nessun wildcard è consentito (sicuro di default). Vedi `backend/src/index.ts`,
+> `.env.example`, `render.yaml`. **Azione richiesta al deploy:** impostare `VERCEL_PROJECT` con
+> lo slug reale del progetto Vercel.
 
 ## 2. 🟠 Enumerazione degli account
 
-**File:** `server/src/controllers/auth.controller.ts:44` e `server/src/services/auth.service.ts:70`
+**File:** `backend/src/controllers/auth.controller.ts:44` e `backend/src/services/auth.service.ts:70`
 
 - La registrazione risponde `409 "Email già registrata"`, rivelando se un'email esiste.
 - `autentica()` ritorna `null` senza eseguire `bcrypt.compare` quando l'utente non esiste:
@@ -69,9 +74,15 @@ Il rate limit (20 tentativi / 15 min) attenua l'abuso ma non elimina il canale.
 istruzioni…" nei flussi con email) ed eseguire comunque un `bcrypt.compare` fittizio su un
 hash costante quando l'utente non esiste, per uniformare i tempi.
 
+> ✅ **Mitigato (2026-06-21):** `autentica()` ora esegue un `bcrypt.compare` contro un hash
+> costante (`HASH_FITTIZIO`) quando l'utente non esiste, uniformando i tempi di risposta del
+> login (~stesso costo del confronto reale). Verificato: login con email inesistente ~465ms.
+> *Residuo:* la registrazione continua a restituire `409` (scelta UX consapevole, sotto rate
+> limit); valutare un messaggio neutro se l'enumerazione in registrazione diventa una priorità.
+
 ## 3. 🟠 Endpoint AI senza validazione di schema né limiti di lunghezza
 
-**File:** `server/src/controllers/ai.controller.ts:6,23`
+**File:** `backend/src/controllers/ai.controller.ts:6,23`
 
 `analizzaEmail`/`generaOfferta` controllano solo la **presenza** dei campi; non c'è schema
 `zod` né limite di lunghezza (oltre al cap globale di `1mb` su `express.json`). Con il
@@ -84,9 +95,15 @@ provider euristico attuale il rischio è basso, ma quando verrà collegato un LL
 `oggetto ≤ 300`, `corpo ≤ 10.000` caratteri; trattare il testo email come **dato non fidato**
 nel prompt del provider (delimitazione/escaping, istruzioni di sistema separate).
 
+> ✅ **Risolto (2026-06-21):** entrambi gli endpoint usano ora schemi `zod` con limiti di
+> lunghezza (`mittente ≤ 320`, `oggetto ≤ 300`, `corpo ≤ 10.000`, `cliente ≤ 200`,
+> `richiesta ≤ 10.000`) e restituiscono `400` con dettaglio errori. Verificato: payload non
+> valido e `corpo` >10k → `400`; payload valido → `200`. Il trattamento del testo come dato
+> non fidato nel prompt resta da applicare al momento dell'integrazione di un LLM reale.
+
 ## 4. 🟡 Fallback di `jwtSecret` a stringa vuota in produzione
 
-**File:** `server/src/config/env.ts:38` — `env.JWT_SECRET ?? (isProd ? "" : "dev-secret…")`
+**File:** `backend/src/config/env.ts:38` — `env.JWT_SECRET ?? (isProd ? "" : "dev-secret…")`
 
 Oggi il controllo a `env.ts:41` interrompe l'avvio se `JWT_SECRET` manca in produzione,
 quindi la stringa vuota non viene mai usata. Resta però un *footgun*: se quel controllo
@@ -95,7 +112,7 @@ segreto vuoto. **Raccomandazione:** non prevedere un fallback vuoto — fallire 
 
 ## 5. 🟡 Il logout non invalida il JWT lato server
 
-**File:** `server/src/controllers/auth.controller.ts:100`
+**File:** `backend/src/controllers/auth.controller.ts:100`
 
 Il logout cancella solo i cookie; un JWT eventualmente esfiltrato resta valido fino alla
 scadenza (7 giorni). Senza store di sessione non è revocabile. Accettabile per questo ambito,
@@ -103,7 +120,7 @@ ma da documentare; se richiesto, introdurre una denylist di token o `tokenVersio
 
 ## 6. 🟡 Token CSRF longevo, leggibile da JS e non legato alla sessione
 
-**File:** `server/src/utils/token.ts:40` + `server/src/middleware/auth.ts:18`
+**File:** `backend/src/utils/token.ts:40` + `backend/src/middleware/auth.ts:18`
 
 Double-submit classico: corretto e robusto rispetto a CSRF cross-site (un sito terzo non può
 leggere il cookie né impostare l'header `X-CSRF-Token` cross-origin). Note: il token è
@@ -123,7 +140,7 @@ un LLM reale:
 
 ## 8. ⚪ Race condition sull'unicità dell'email
 
-**File:** `server/src/services/auth.service.ts:57,66`
+**File:** `backend/src/services/auth.service.ts:57,66`
 
 Tra il controllo `trovaPerEmail` e `User.create` due richieste concorrenti possono superare il
 check; l'indice `unique` su Mongo previene il duplicato ma l'errore emerge come `500` generico

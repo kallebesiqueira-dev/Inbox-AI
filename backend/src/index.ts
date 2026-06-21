@@ -15,11 +15,18 @@ if (isProd) app.set("trust proxy", 1);
 
 app.use(helmet());
 
-// Allowlist CORS: origini esplicite da CLIENT_URL (separate da virgola)
-// più i deploy di anteprima Vercel (*.vercel.app).
+// Allowlist CORS: origini esplicite da CLIENT_URL (separate da virgola).
 const consentite = env.CLIENT_URL.split(",")
   .map((o) => o.trim())
   .filter(Boolean);
+
+// Anteprime Vercel: abilitate SOLO se VERCEL_PROJECT è configurato, e limitate
+// ai sottodomini del progetto (es. inbox-ai-*.vercel.app). Senza questa variabile
+// nessun wildcard è consentito, per non fidarsi di qualunque *.vercel.app.
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const anteprimaVercel = env.VERCEL_PROJECT
+  ? new RegExp(`^${escapeRegExp(env.VERCEL_PROJECT)}[a-z0-9-]*\\.vercel\\.app$`)
+  : null;
 
 app.use(
   cors({
@@ -27,7 +34,7 @@ app.use(
       if (!origin) return cb(null, true);
       try {
         const host = new URL(origin).hostname;
-        if (consentite.includes(origin) || /\.vercel\.app$/.test(host)) {
+        if (consentite.includes(origin) || anteprimaVercel?.test(host)) {
           return cb(null, true);
         }
       } catch {
