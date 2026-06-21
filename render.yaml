@@ -25,3 +25,6 @@ services:
         value: default
       - key: AI_API_KEY
         sync: false
+      # Per l'accesso con Google: lo stesso Client ID del frontend.
+      - key: GOOGLE_CLIENT_ID
+        sync: false

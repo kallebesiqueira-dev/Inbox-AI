@@ -35,11 +35,7 @@ export function Login() {
       <Card className="w-full max-w-md">
         <CardContent className="p-8">
           <div className="mb-8 flex flex-col items-center text-center">
-            <img
-              src="/icon.jpeg"
-              alt="Inbox AI"
-              className="h-40 w-auto rounded-2xl shadow-soft"
-            />
+            <img src="/logo.jpeg" alt="Inbox AI" className="h-20 w-auto rounded" />
           </div>
 
           <form className="space-y-4" onSubmit={invia}>

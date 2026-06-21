@@ -1,28 +1,58 @@
+import { useState } from "react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { NavLinks } from "./NavLinks";
 
-/**
- * Sidebar a scomparsa (solo md+): rail con sole icone che si espande
- * automaticamente al passaggio del mouse. Il pannello espanso si sovrappone
- * al contenuto (nessun reflow), grazie al contenitore di larghezza fissa.
- */
+/** Sidebar (md+) richiudibile con pulsante: espansa mostra logo + voci,
+ *  compressa mostra solo le icone. Lo stato persiste in localStorage. */
 export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(
+    () => typeof localStorage !== "undefined" && localStorage.getItem("ia_sidebar") === "1"
+  );
+
+  const toggle = () =>
+    setCollapsed((c) => {
+      localStorage.setItem("ia_sidebar", c ? "0" : "1");
+      return !c;
+    });
+
   return (
-    <div className="group/sidebar relative hidden w-16 shrink-0 md:block">
-      <aside className="absolute inset-y-0 left-0 z-30 flex w-16 flex-col overflow-hidden border-r border-border bg-surface shadow-soft transition-[width] duration-200 ease-out group-hover/sidebar:w-64 group-hover/sidebar:shadow-card">
-        <div className="flex h-16 items-center border-b border-border px-3">
-          <img
-            src="/icon.jpeg"
-            alt="Inbox AI"
-            className="size-10 shrink-0 rounded-lg object-cover"
-          />
-        </div>
+    <aside
+      className={cn(
+        "hidden shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 md:flex",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-16 items-center border-b border-border",
+          collapsed ? "justify-center px-2" : "justify-between px-4"
+        )}
+      >
+        {!collapsed && (
+          <img src="/logo.jpeg" alt="Inbox AI" className="h-10 w-auto rounded" />
+        )}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={collapsed ? "Espandi menu" : "Comprimi menu"}
+          className="flex size-9 items-center justify-center rounded-md text-foreground/60 hover:bg-background hover:text-foreground"
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="size-5" />
+          ) : (
+            <PanelLeftClose className="size-5" />
+          )}
+        </button>
+      </div>
 
-        <NavLinks />
+      <NavLinks collapsed={collapsed} />
 
-        <div className="overflow-hidden whitespace-nowrap border-t border-border p-4 text-xs text-muted-foreground">
+      {!collapsed && (
+        <div className="border-t border-border p-4 text-xs text-muted-foreground">
           Automazione operativa e commerciale
         </div>
-      </aside>
-    </div>
+      )}
+    </aside>
   );
 }
