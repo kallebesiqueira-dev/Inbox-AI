@@ -12,9 +12,14 @@ import {
   COOKIE_CSRF,
 } from "../utils/token.js";
 
-function avviaSessione(res: Response, userId: string) {
+// Avvia la sessione e ritorna il token CSRF. Viene inviato anche nel corpo della
+// risposta perché il frontend, su dominio diverso dall'API, non può leggere il
+// cookie CSRF via document.cookie: lo riceve qui e lo rispedisce nell'header.
+function avviaSessione(res: Response, userId: string): string {
+  const csrf = generaCsrf();
   res.cookie(COOKIE_SESSIONE, firmaToken(userId), opzioniSessione());
-  res.cookie(COOKIE_CSRF, generaCsrf(), opzioniCsrf());
+  res.cookie(COOKIE_CSRF, csrf, opzioniCsrf());
+  return csrf;
 }
 
 const registraSchema = z.object({
@@ -40,8 +45,8 @@ export async function registra(req: Request, res: Response) {
   if (!utente) {
     return res.status(409).json({ messaggio: "Email già registrata." });
   }
-  avviaSessione(res, utente.id);
-  res.status(201).json(utente);
+  const csrfToken = avviaSessione(res, utente.id);
+  res.status(201).json({ ...utente, csrfToken });
 }
 
 export async function login(req: Request, res: Response) {
@@ -55,8 +60,8 @@ export async function login(req: Request, res: Response) {
   if (!utente) {
     return res.status(401).json({ messaggio: "Email o password non corretti." });
   }
-  avviaSessione(res, utente.id);
-  res.json(utente);
+  const csrfToken = avviaSessione(res, utente.id);
+  res.json({ ...utente, csrfToken });
 }
 
 export async function google(req: Request, res: Response) {
@@ -82,8 +87,8 @@ export async function google(req: Request, res: Response) {
       payload.email,
       payload.name ?? payload.email
     );
-    avviaSessione(res, utente.id);
-    res.json(utente);
+    const csrfToken = avviaSessione(res, utente.id);
+    res.json({ ...utente, csrfToken });
   } catch {
     res.status(401).json({ messaggio: "Verifica Google fallita." });
   }
@@ -94,7 +99,13 @@ export async function me(req: Request, res: Response) {
   if (!utente) {
     return res.status(401).json({ messaggio: "Non autenticato." });
   }
-  res.json(utente);
+  // Re-idrata il token CSRF per il client (es. dopo un refresh di pagina).
+  let csrfToken = req.cookies?.[COOKIE_CSRF] as string | undefined;
+  if (!csrfToken) {
+    csrfToken = generaCsrf();
+    res.cookie(COOKIE_CSRF, csrfToken, opzioniCsrf());
+  }
+  res.json({ ...utente, csrfToken });
 }
 
 export async function logout(_req: Request, res: Response) {

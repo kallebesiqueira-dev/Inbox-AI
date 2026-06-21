@@ -1,10 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError, setCsrfToken } from "@/lib/api";
 
 export interface Utente {
   id: string;
   email: string;
   nome: string;
+}
+
+/** Risposta di autenticazione: utente + token CSRF da usare negli header. */
+type SessioneUtente = Utente & { csrfToken?: string };
+
+function memorizzaSessione(u: SessioneUtente) {
+  setCsrfToken(u.csrfToken ?? null);
+  return u;
 }
 
 export interface CredenzialiLogin {
@@ -24,9 +32,12 @@ export function useMe() {
     queryKey: ME_KEY,
     queryFn: async () => {
       try {
-        return await apiFetch<Utente>("/auth/me");
+        return memorizzaSessione(await apiFetch<SessioneUtente>("/auth/me"));
       } catch (e) {
-        if (e instanceof ApiError && e.status === 401) return null;
+        if (e instanceof ApiError && e.status === 401) {
+          setCsrfToken(null);
+          return null;
+        }
         throw e;
       }
     },
@@ -38,11 +49,11 @@ export function useLogin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (cred: CredenzialiLogin) =>
-      apiFetch<Utente>("/auth/login", {
+      apiFetch<SessioneUtente>("/auth/login", {
         method: "POST",
         body: JSON.stringify(cred),
       }),
-    onSuccess: (utente) => qc.setQueryData(ME_KEY, utente),
+    onSuccess: (utente) => qc.setQueryData(ME_KEY, memorizzaSessione(utente)),
   });
 }
 
@@ -50,11 +61,11 @@ export function useRegister() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dati: DatiRegistrazione) =>
-      apiFetch<Utente>("/auth/register", {
+      apiFetch<SessioneUtente>("/auth/register", {
         method: "POST",
         body: JSON.stringify(dati),
       }),
-    onSuccess: (utente) => qc.setQueryData(ME_KEY, utente),
+    onSuccess: (utente) => qc.setQueryData(ME_KEY, memorizzaSessione(utente)),
   });
 }
 
@@ -62,11 +73,11 @@ export function useGoogleLogin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (credential: string) =>
-      apiFetch<Utente>("/auth/google", {
+      apiFetch<SessioneUtente>("/auth/google", {
         method: "POST",
         body: JSON.stringify({ credential }),
       }),
-    onSuccess: (utente) => qc.setQueryData(ME_KEY, utente),
+    onSuccess: (utente) => qc.setQueryData(ME_KEY, memorizzaSessione(utente)),
   });
 }
 
@@ -75,6 +86,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiFetch<void>("/auth/logout", { method: "POST" }),
     onSuccess: () => {
+      setCsrfToken(null);
       qc.setQueryData(ME_KEY, null);
       qc.clear();
     },

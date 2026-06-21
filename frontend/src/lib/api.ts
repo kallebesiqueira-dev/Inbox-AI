@@ -10,11 +10,12 @@ export class ApiError extends Error {
   }
 }
 
-function leggiCookie(nome: string): string | undefined {
-  return document.cookie
-    .split("; ")
-    .find((r) => r.startsWith(`${nome}=`))
-    ?.split("=")[1];
+// Token CSRF tenuto in memoria: il cookie CSRF è sul dominio dell'API (diverso dal
+// frontend) e non è leggibile via document.cookie. Lo riceviamo dal corpo delle
+// risposte di autenticazione (vedi useAuth) e lo reinviamo nell'header.
+let csrfToken: string | null = null;
+export function setCsrfToken(token: string | null) {
+  csrfToken = token;
 }
 
 /** Wrapper attorno a fetch verso l'API backend, con cookie, CSRF e gestione errori. */
@@ -29,9 +30,8 @@ export async function apiFetch<T>(
   };
 
   // Protezione CSRF double-submit per le richieste che modificano lo stato.
-  if (metodo !== "GET") {
-    const csrf = leggiCookie("ia_csrf");
-    if (csrf) headers["X-CSRF-Token"] = csrf;
+  if (metodo !== "GET" && csrfToken) {
+    headers["X-CSRF-Token"] = csrfToken;
   }
 
   const res = await fetch(`${API_URL}/api${path}`, {
