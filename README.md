@@ -1,8 +1,6 @@
 <div align="center">
   <img src="frontend/public/logo.jpeg" alt="Inbox AI" width="220" />
 
-  # Inbox AI
-
   **Piattaforma SaaS B2B per automatizzare attività operative, commerciali e amministrative tramite intelligenza artificiale.**
 
   ![Stack](https://img.shields.io/badge/stack-React%20%7C%20Node%20%7C%20MongoDB-0F4C5C)
