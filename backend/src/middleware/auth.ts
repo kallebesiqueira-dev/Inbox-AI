@@ -1,14 +1,15 @@
 import type { Request, Response, NextFunction } from "express";
 import { verificaToken, COOKIE_SESSIONE, COOKIE_CSRF } from "../utils/token.js";
+import { eRevocato } from "../services/revocation.service.js";
 
-/** Richiede una sessione valida; popola req.userId. */
+/** Richiede una sessione valida e non revocata; popola req.userId. */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies?.[COOKIE_SESSIONE];
-  const userId = token ? verificaToken(token) : null;
-  if (!userId) {
+  const sessione = token ? verificaToken(token) : null;
+  if (!sessione || eRevocato(sessione.jti)) {
     return res.status(401).json({ messaggio: "Non autenticato." });
   }
-  req.userId = userId;
+  req.userId = sessione.sub;
   next();
 }
 

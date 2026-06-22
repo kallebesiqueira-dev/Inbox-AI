@@ -5,6 +5,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
+import { caricaRevocati } from "./services/revocation.service.js";
 import routes from "./routes/index.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
@@ -56,6 +57,8 @@ app.use(errorHandler);
 
 async function avvia() {
   await connectDB();
+  // Ripopola la cache delle revoche dei token (sopravvive a riavvii/deploy).
+  await caricaRevocati();
   const server = app.listen(env.PORT, () => {
     console.log(`[Server] Inbox AI API in ascolto sulla porta ${env.PORT}`);
   });

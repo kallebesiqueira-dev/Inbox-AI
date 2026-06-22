@@ -5,12 +5,14 @@ import { env } from "../config/env.js";
 import * as auth from "../services/auth.service.js";
 import {
   firmaToken,
+  verificaToken,
   generaCsrf,
   opzioniSessione,
   opzioniCsrf,
   COOKIE_SESSIONE,
   COOKIE_CSRF,
 } from "../utils/token.js";
+import { revoca } from "../services/revocation.service.js";
 
 // Avvia la sessione e ritorna il token CSRF. Viene inviato anche nel corpo della
 // risposta perché il frontend, su dominio diverso dall'API, non può leggere il
@@ -108,7 +110,13 @@ export async function me(req: Request, res: Response) {
   res.json({ ...utente, csrfToken });
 }
 
-export async function logout(_req: Request, res: Response) {
+export async function logout(req: Request, res: Response) {
+  // Revoca lato server: il token resta invalido fino alla scadenza naturale
+  // anche se fosse stato esfiltrato (i cookie da soli non basterebbero).
+  const token = req.cookies?.[COOKIE_SESSIONE] as string | undefined;
+  const sessione = token ? verificaToken(token) : null;
+  if (sessione) await revoca(sessione.jti, sessione.exp);
+
   res.clearCookie(COOKIE_SESSIONE, opzioniSessione());
   res.clearCookie(COOKIE_CSRF, opzioniCsrf());
   res.status(204).end();

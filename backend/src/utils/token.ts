@@ -8,14 +8,37 @@ const SETTE_GIORNI = 7 * 24 * 60 * 60 * 1000;
 export const COOKIE_SESSIONE = "ia_session";
 export const COOKIE_CSRF = "ia_csrf";
 
-export function firmaToken(userId: string): string {
-  return jwt.sign({ sub: userId }, jwtSecret, { expiresIn: "7d" });
+export interface SessionePayload {
+  /** ID utente. */
+  sub: string;
+  /** ID univoco del token, usato per la revoca lato server. */
+  jti: string;
+  /** Scadenza in secondi epoch. */
+  exp: number;
 }
 
-export function verificaToken(token: string): string | null {
+export function firmaToken(userId: string): string {
+  return jwt.sign({ sub: userId, jti: crypto.randomUUID() }, jwtSecret, {
+    expiresIn: "7d",
+  });
+}
+
+export function verificaToken(token: string): SessionePayload | null {
   try {
     const payload = jwt.verify(token, jwtSecret);
-    return typeof payload === "object" && payload.sub ? String(payload.sub) : null;
+    if (
+      typeof payload !== "object" ||
+      !payload.sub ||
+      !payload.jti ||
+      !payload.exp
+    ) {
+      return null;
+    }
+    return {
+      sub: String(payload.sub),
+      jti: String(payload.jti),
+      exp: Number(payload.exp),
+    };
   } catch {
     return null;
   }

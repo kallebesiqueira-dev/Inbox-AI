@@ -23,7 +23,7 @@ confinato lato server. I punti sotto sono miglioramenti, non difetti bloccanti �
 | 2  | 🟠 Media     | Enumerazione account (registrazione/login)    | ✅ Mitigato (login) |
 | 3  | 🟠 Media     | Endpoint AI senza schema/limiti di lunghezza  | ✅ Risolto |
 | 4  | 🟡 Bassa     | Fallback `jwtSecret` a stringa vuota in prod  | ✅ **Risolto** (2026-06-22) |
-| 5  | 🟡 Bassa     | Logout non revoca il JWT lato server          | Accettabile, da documentare |
+| 5  | 🟡 Bassa     | Logout non revoca il JWT lato server          | ✅ **Risolto** (2026-06-22) |
 | 6  | 🟡 Bassa     | Token CSRF longevo (7g), non legato alla sessione | Accettabile |
 | 7  | ⚪ Info      | GDPR / dati a riposo (Gmail + sub-processor AI) | Futuro |
 | 8  | ⚪ Info      | Race su unicità email → 500 invece di 409      | Cosmetico |
@@ -122,6 +122,17 @@ segreto vuoto. **Raccomandazione:** non prevedere un fallback vuoto — fallire 
 Il logout cancella solo i cookie; un JWT eventualmente esfiltrato resta valido fino alla
 scadenza (7 giorni). Senza store di sessione non è revocabile. Accettabile per questo ambito,
 ma da documentare; se richiesto, introdurre una denylist di token o `tokenVersion` per utente.
+
+> ✅ **Risolto (2026-06-22):** introdotta una **denylist per `jti`**. Ogni token di sessione
+> porta ora un `jti` univoco (`utils/token.ts`). Al logout il `jti` viene revocato fino alla
+> scadenza naturale (`services/revocation.service.ts`): un token esfiltrato non è più valido
+> dopo il logout. La revoca vive in una **cache in memoria** (controllo O(1) in `requireAuth`,
+> nessun round-trip al DB nel percorso caldo) ed è **persistita** nella collezione
+> `RevokedToken` con **indice TTL** (auto-pulizia + ricarica all'avvio: sopravvive a
+> riavvii/deploy). In modalità demo (senza Mongo) funziona solo in memoria.
+> **Nota di esercizio:** la cache è per-istanza; con più istanze servirebbe uno store condiviso
+> (es. Redis). Su Render free (istanza singola) è corretto. Verificato via smoke test:
+> `login → /me 200 → logout 204 → /me con token revocato → 401`.
 
 ## 6. 🟡 Token CSRF longevo, leggibile da JS e non legato alla sessione
 
