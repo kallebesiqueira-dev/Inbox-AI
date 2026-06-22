@@ -30,6 +30,11 @@ export interface DatiOfferta {
   richiesta: string;
 }
 
+export interface MessaggioChat {
+  ruolo: "utente" | "assistente";
+  contenuto: string;
+}
+
 export interface OffertaGenerata {
   titolo: string;
   corpo: string;
@@ -41,4 +46,6 @@ export interface AIProvider {
   readonly nome: string;
   analizzaEmail(email: EmailDaAnalizzare): Promise<RisultatoAnalisi>;
   generaOfferta(dati: DatiOfferta): Promise<OffertaGenerata>;
+  /** Conversazione con l'assistente: produce la risposta in streaming (chunk di testo). */
+  chat(messaggi: MessaggioChat[]): AsyncIterable<string>;
 }

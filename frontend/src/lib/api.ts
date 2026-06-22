@@ -54,3 +54,31 @@ export async function apiFetch<T>(
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
+
+/**
+ * Variante per le risposte in streaming (es. chat AI): invia un POST con cookie
+ * e CSRF e restituisce la Response, lasciando al chiamante la lettura dello stream.
+ */
+export async function apiStream(path: string, body: unknown): Promise<Response> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+
+  const res = await fetch(`${API_URL}/api${path}`, {
+    method: "POST",
+    credentials: "include",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok || !res.body) {
+    let messaggio = `Errore richiesta (${res.status})`;
+    try {
+      const b = await res.json();
+      if (b?.messaggio) messaggio = b.messaggio;
+    } catch {
+      /* risposta senza corpo JSON */
+    }
+    throw new ApiError(res.status, messaggio);
+  }
+  return res;
+}

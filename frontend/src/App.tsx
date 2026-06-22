@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Dashboard } from "@/pages/Dashboard";
+import { Chat } from "@/pages/Chat";
 import { InboxPage } from "@/pages/Inbox";
 import { Offerte } from "@/pages/Offerte";
 import { Crm } from "@/pages/Crm";
@@ -17,6 +18,7 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/assistente" element={<Chat />} />
           <Route path="/inbox" element={<InboxPage />} />
           <Route path="/offerte" element={<Offerte />} />
           <Route path="/crm" element={<Crm />} />

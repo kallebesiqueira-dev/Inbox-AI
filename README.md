@@ -69,6 +69,7 @@ resa sobria e professionale.
 | Modulo           | Descrizione |
 |------------------|-------------|
 | **Dashboard**    | KPI operativi (email elaborate, offerte generate, opportunità aperte, tempo risparmiato) e attività recenti. |
+| **Assistente**   | Chat AI conversazionale in streaming per gestire email, offerte, opportunità e approvazioni. |
 | **Inbox**        | Email ricevute, analizzate e classificate per categoria e priorità. |
 | **Offerte**      | Generazione automatica, modifica e versioning dei documenti commerciali (Bozza → In revisione → Approvata → Inviata). |
 | **CRM**          | Pipeline a colonne: Nuovo → In Analisi → Offerta Inviata → Negoziazione → Chiuso. |
@@ -94,7 +95,7 @@ resa sobria e professionale.
 │   │   ├── components/     # UI, layout, guardie di rotta
 │   │   ├── hooks/          # Hook TanStack Query (offerte, opportunità, approvazioni, auth)
 │   │   ├── lib/            # Client API (fetch + cookie + CSRF)
-│   │   └── pages/          # Dashboard, Inbox, Offerte, CRM, Approvazioni, Impostazioni, Login
+│   │   └── pages/          # Dashboard, Assistente, Inbox, Offerte, CRM, Approvazioni, Impostazioni, Login
 │   └── public/            # logo.jpeg, icon.jpeg
 ├── backend/               # Backend Node + Express
 │   └── src/

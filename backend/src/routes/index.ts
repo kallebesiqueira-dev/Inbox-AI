@@ -1,7 +1,7 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import { isProd } from "../config/env.js";
-import { analizzaEmail, generaOfferta } from "../controllers/ai.controller.js";
+import { analizzaEmail, generaOfferta, chat } from "../controllers/ai.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
 import { aiLimiter } from "../middleware/rateLimit.js";
 import authRouter from "./auth.routes.js";
@@ -33,6 +33,7 @@ router.use("/approvazioni", requireAuth, csrfProtection, approvazioneRouter);
 // Funzionalità AI (protette + rate limit)
 router.post("/ai/analizza-email", requireAuth, csrfProtection, aiLimiter, analizzaEmail);
 router.post("/ai/genera-offerta", requireAuth, csrfProtection, aiLimiter, generaOfferta);
+router.post("/ai/chat", requireAuth, csrfProtection, aiLimiter, chat);
 
 // KPI di esempio per la dashboard (protetti)
 router.get("/dashboard/kpi", requireAuth, (_req, res) => {

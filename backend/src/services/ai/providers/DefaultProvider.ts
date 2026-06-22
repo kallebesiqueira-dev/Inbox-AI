@@ -5,6 +5,7 @@ import type {
   DatiOfferta,
   OffertaGenerata,
   CategoriaEmail,
+  MessaggioChat,
 } from "./AIProvider.js";
 
 /**
@@ -50,5 +51,19 @@ export class DefaultProvider implements AIProvider {
         { descrizione: "Personalizzazione", importo: 500 },
       ],
     };
+  }
+
+  async *chat(messaggi: MessaggioChat[]): AsyncIterable<string> {
+    const ultimo = [...messaggi].reverse().find((m) => m.ruolo === "utente");
+    const richiesta = ultimo ? ` riguardo a "${ultimo.contenuto.slice(0, 160)}"` : "";
+    const testo =
+      `Ho preso nota della tua richiesta${richiesta}. ` +
+      "L'assistente avanzato non è attivo in questa configurazione, ma posso comunque " +
+      "aiutarti a organizzare email, offerte, opportunità CRM e approvazioni. " +
+      "Indica pure l'attività che vuoi avviare.";
+    // Emissione parola per parola per un effetto coerente con lo streaming reale.
+    for (const parola of testo.split(" ")) {
+      yield parola + " ";
+    }
   }
 }
