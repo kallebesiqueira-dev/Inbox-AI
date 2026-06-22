@@ -25,5 +25,19 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      chunkSizeWarningLimit: 700,
+      rollupOptions: {
+        output: {
+          // Separa le dipendenze stabili in chunk dedicati, meglio memorizzabili
+          // in cache dal browser tra un deploy e l'altro.
+          manualChunks: {
+            "react-vendor": ["react", "react-dom", "react-router-dom"],
+            query: ["@tanstack/react-query"],
+            icons: ["lucide-react"],
+          },
+        },
+      },
+    },
   };
 });

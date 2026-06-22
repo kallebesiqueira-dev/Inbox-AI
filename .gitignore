@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+# Config compilato emesso da `tsc -b` (la sorgente è vite.config.ts)
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Environment
 .env

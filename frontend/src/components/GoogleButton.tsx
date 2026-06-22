@@ -11,28 +11,47 @@ export function GoogleButton() {
 
   useEffect(() => {
     if (!CLIENT_ID || !ref.current) return;
+    const clientId = CLIENT_ID;
+    let annullato = false;
 
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.onload = () => {
-      window.google?.accounts.id.initialize({
-        client_id: CLIENT_ID,
+    function inizializza() {
+      if (annullato || !ref.current || !window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
         callback: (resp) =>
           google.mutate(resp.credential, { onSuccess: () => navigate("/app") }),
       });
-      if (ref.current) {
-        window.google?.accounts.id.renderButton(ref.current, {
-          theme: "outline",
-          size: "large",
-          text: "continue_with",
-          locale: "it",
-          width: 320,
-        });
-      }
+      window.google.accounts.id.renderButton(ref.current, {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        locale: "it",
+        width: 320,
+      });
+    }
+
+    // Riusa lo script GSI se già presente (evita doppie inizializzazioni con
+    // React StrictMode in sviluppo).
+    if (window.google?.accounts?.id) {
+      inizializza();
+      return () => {
+        annullato = true;
+      };
+    }
+
+    let script = document.getElementById("gsi-client") as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "gsi-client";
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    script.addEventListener("load", inizializza);
+    return () => {
+      annullato = true;
+      script?.removeEventListener("load", inizializza);
     };
-    document.body.appendChild(script);
-    return () => script.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
