@@ -21,9 +21,12 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      # Per usare Groq: impostare AI_PROVIDER=groq e AI_API_KEY con la chiave.
       - key: AI_PROVIDER
         value: default
       - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
         sync: false
       # Per l'accesso con Google: lo stesso Client ID del frontend.
       - key: GOOGLE_CLIENT_ID

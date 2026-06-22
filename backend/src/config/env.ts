@@ -20,6 +20,8 @@ const schema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   AI_PROVIDER: z.string().default("default"),
   AI_API_KEY: z.string().optional(),
+  // Modello del provider AI (es. per Groq: "llama-3.3-70b-versatile").
+  AI_MODEL: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

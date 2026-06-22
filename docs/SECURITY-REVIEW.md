@@ -98,8 +98,12 @@ nel prompt del provider (delimitazione/escaping, istruzioni di sistema separate)
 > ✅ **Risolto (2026-06-21):** entrambi gli endpoint usano ora schemi `zod` con limiti di
 > lunghezza (`mittente ≤ 320`, `oggetto ≤ 300`, `corpo ≤ 10.000`, `cliente ≤ 200`,
 > `richiesta ≤ 10.000`) e restituiscono `400` con dettaglio errori. Verificato: payload non
-> valido e `corpo` >10k → `400`; payload valido → `200`. Il trattamento del testo come dato
-> non fidato nel prompt resta da applicare al momento dell'integrazione di un LLM reale.
+> valido e `corpo` >10k → `400`; payload valido → `200`.
+>
+> ✅ **Aggiornamento (2026-06-22):** integrato un LLM reale (`GroqProvider`). Il testo non
+> fidato è ora **delimitato** (`<email>`/`<richiesta>`) e il *system prompt* istruisce
+> esplicitamente a non eseguire istruzioni contenute nel contenuto. L'output del modello è
+> validato con `zod` prima di lasciare il layer AI; in caso di errore si ricade sull'euristica.
 
 ## 4. 🟡 Fallback di `jwtSecret` a stringa vuota in produzione
 

@@ -150,8 +150,9 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `JWT_SECRET`            | Backend  | Segreto per la firma dei cookie di sessione. Obbligatorio in produzione. |
 | `GOOGLE_CLIENT_ID`      | Backend  | Verifica del token Google (accesso opzionale). |
 | `GOOGLE_CLIENT_SECRET`  | Backend  | Credenziale Google. |
-| `AI_PROVIDER`           | Backend  | Provider AI astratto (default `default`). |
+| `AI_PROVIDER`           | Backend  | Provider AI astratto: `default` (euristico) o `groq`. |
 | `AI_API_KEY`            | Backend  | Chiave del provider AI (mai esposta al client). |
+| `AI_MODEL`              | Backend  | Modello del provider AI (opzionale; per Groq default `llama-3.3-70b-versatile`). |
 | `VITE_API_URL`          | Frontend | URL dell'API in produzione. |
 | `VITE_API_PROXY`        | Frontend | Proxy dell'API in sviluppo. |
 | `VITE_GOOGLE_CLIENT_ID` | Frontend | Client ID Google per il pulsante di accesso. |
