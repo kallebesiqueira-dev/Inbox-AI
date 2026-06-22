@@ -19,7 +19,7 @@ export function GoogleButton() {
       window.google?.accounts.id.initialize({
         client_id: CLIENT_ID,
         callback: (resp) =>
-          google.mutate(resp.credential, { onSuccess: () => navigate("/") }),
+          google.mutate(resp.credential, { onSuccess: () => navigate("/app") }),
       });
       if (ref.current) {
         window.google?.accounts.id.renderButton(ref.current, {

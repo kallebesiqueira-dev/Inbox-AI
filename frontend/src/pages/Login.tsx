@@ -22,7 +22,7 @@ export function Login() {
 
   function invia(e: React.FormEvent) {
     e.preventDefault();
-    const onSuccess = () => navigate("/");
+    const onSuccess = () => navigate("/app");
     if (modalita === "login") {
       login.mutate({ email, password }, { onSuccess });
     } else {

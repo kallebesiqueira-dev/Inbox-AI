@@ -5,6 +5,7 @@ import {
   TrendingUp,
   ArrowUpRight,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,12 +91,12 @@ export function Dashboard() {
                 </div>
               </div>
             ))}
-            <a
-              href="/inbox"
+            <Link
+              to="/app/inbox"
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
               Vedi tutte <ArrowUpRight className="size-3.5" />
-            </a>
+            </Link>
           </CardContent>
         </Card>
       </div>

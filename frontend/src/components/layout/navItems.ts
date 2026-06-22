@@ -17,11 +17,11 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/assistente", label: "Assistente", icon: Sparkles },
-  { to: "/inbox", label: "Inbox", icon: Inbox },
-  { to: "/offerte", label: "Offerte", icon: FileText },
-  { to: "/crm", label: "CRM", icon: Users },
-  { to: "/approvazioni", label: "Approvazioni", icon: CheckSquare },
-  { to: "/impostazioni", label: "Impostazioni", icon: Settings },
+  { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/app/assistente", label: "Assistente", icon: Sparkles },
+  { to: "/app/inbox", label: "Inbox", icon: Inbox },
+  { to: "/app/offerte", label: "Offerte", icon: FileText },
+  { to: "/app/crm", label: "CRM", icon: Users },
+  { to: "/app/approvazioni", label: "Approvazioni", icon: CheckSquare },
+  { to: "/app/impostazioni", label: "Impostazioni", icon: Settings },
 ];

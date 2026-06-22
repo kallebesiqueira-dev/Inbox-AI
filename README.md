@@ -95,7 +95,8 @@ resa sobria e professionale.
 │   │   ├── components/     # UI, layout, guardie di rotta
 │   │   ├── hooks/          # Hook TanStack Query (offerte, opportunità, approvazioni, auth)
 │   │   ├── lib/            # Client API (fetch + cookie + CSRF)
-│   │   └── pages/          # Dashboard, Assistente, Inbox, Offerte, CRM, Approvazioni, Impostazioni, Login
+│   │   ├── pages/          # Dashboard, Assistente, Inbox, Offerte, CRM, Approvazioni, Impostazioni, Login
+│   │   └── pages/marketing/ # Sito pubblico: Landing, Funzionalità, Documentazione
 │   └── public/            # logo.jpeg, icon.jpeg
 ├── backend/               # Backend Node + Express
 │   └── src/
