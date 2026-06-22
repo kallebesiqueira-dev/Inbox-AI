@@ -35,12 +35,8 @@ if (!parsed.success) {
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === "production";
 
-// Segreto JWT: obbligatorio in produzione (vedi controllo sotto),
-// fallback solo in sviluppo per non bloccare l'avvio locale.
-export const jwtSecret =
-  env.JWT_SECRET ?? (isProd ? "" : "dev-secret-non-usare-in-produzione");
-
-// In produzione alcune variabili sono obbligatorie.
+// In produzione alcune variabili sono obbligatorie: si arresta l'avvio se mancano,
+// prima di derivare qualsiasi segreto.
 if (isProd) {
   const mancanti = (["MONGODB_URI", "JWT_SECRET"] as const).filter(
     (k) => !env[k]
@@ -51,4 +47,17 @@ if (isProd) {
     );
     process.exit(1);
   }
+  // Un segreto troppo corto è inaccettabile quanto uno mancante.
+  if ((env.JWT_SECRET as string).length < 32) {
+    console.error(
+      "[Config] JWT_SECRET deve essere lungo almeno 32 caratteri in produzione."
+    );
+    process.exit(1);
+  }
 }
+
+// Segreto JWT: in produzione è garantito dal controllo sopra. In sviluppo si usa
+// un fallback locale non vuoto. Nessun fallback a stringa vuota: firmare/verificare
+// token con segreto vuoto deve essere impossibile per costruzione.
+export const jwtSecret =
+  env.JWT_SECRET ?? "dev-secret-non-usare-in-produzione";

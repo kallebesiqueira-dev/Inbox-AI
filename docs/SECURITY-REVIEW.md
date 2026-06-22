@@ -22,7 +22,7 @@ confinato lato server. I punti sotto sono miglioramenti, non difetti bloccanti �
 | 1  | 🔴 Alta      | CORS: wildcard `*.vercel.app` con credenziali | ✅ **Risolto** (2026-06-21) |
 | 2  | 🟠 Media     | Enumerazione account (registrazione/login)    | ✅ Mitigato (login) |
 | 3  | 🟠 Media     | Endpoint AI senza schema/limiti di lunghezza  | ✅ Risolto |
-| 4  | 🟡 Bassa     | Fallback `jwtSecret` a stringa vuota in prod  | Difesa in profondità |
+| 4  | 🟡 Bassa     | Fallback `jwtSecret` a stringa vuota in prod  | ✅ **Risolto** (2026-06-22) |
 | 5  | 🟡 Bassa     | Logout non revoca il JWT lato server          | Accettabile, da documentare |
 | 6  | 🟡 Bassa     | Token CSRF longevo (7g), non legato alla sessione | Accettabile |
 | 7  | ⚪ Info      | GDPR / dati a riposo (Gmail + sub-processor AI) | Futuro |
@@ -109,6 +109,11 @@ Oggi il controllo a `env.ts:41` interrompe l'avvio se `JWT_SECRET` manca in prod
 quindi la stringa vuota non viene mai usata. Resta però un *footgun*: se quel controllo
 venisse aggirato (es. `NODE_ENV` mal configurato), si firmerebbero/verificherebbero token con
 segreto vuoto. **Raccomandazione:** non prevedere un fallback vuoto — fallire in modo esplicito.
+
+> ✅ **Risolto (2026-06-22):** rimosso il fallback a stringa vuota. Il fallback in sviluppo è
+> ora un segreto locale non vuoto; in produzione `JWT_SECRET` resta obbligatorio (arresto se
+> mancante) e deve essere lungo **≥ 32 caratteri** (arresto altrimenti). Per costruzione non è
+> più possibile firmare/verificare token con segreto vuoto. File: `backend/src/config/env.ts`.
 
 ## 5. 🟡 Il logout non invalida il JWT lato server
 
