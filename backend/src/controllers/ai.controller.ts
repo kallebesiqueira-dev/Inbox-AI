@@ -62,20 +62,24 @@ export async function chat(req: Request, res: Response) {
     });
   }
 
-  // Risposta in streaming: i chunk di testo vengono inviati man mano.
-  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  // Streaming via SSE: i proxy (es. Render) non bufferizzano text/event-stream,
+  // così i token arrivano al client man mano, senza attese.
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
   try {
     for await (const chunk of ai.chat(parsed.data.messaggi)) {
-      res.write(chunk);
+      // Il contenuto è codificato in JSON: niente newline grezzi che rompano l'evento.
+      res.write(`data: ${JSON.stringify(chunk)}\n\n`);
     }
   } catch (err) {
     // Lo stato è già inviato: si chiude lo stream senza cambiare lo status.
     console.error("[AI] Errore durante lo streaming della chat:", err);
   } finally {
+    res.write("data: [DONE]\n\n");
     res.end();
   }
 }

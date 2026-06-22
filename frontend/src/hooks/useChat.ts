@@ -35,11 +35,26 @@ export function useChat() {
       const res = await apiStream("/ai/chat", { messaggi: storico });
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
       let acc = "";
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        acc += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, { stream: true });
+        // Eventi SSE separati da una riga vuota.
+        const eventi = buffer.split("\n\n");
+        buffer = eventi.pop() ?? "";
+        for (const evt of eventi) {
+          const riga = evt.split("\n").find((l) => l.startsWith("data:"));
+          if (!riga) continue;
+          const dato = riga.slice(5).trim();
+          if (dato === "" || dato === "[DONE]") continue;
+          try {
+            acc += JSON.parse(dato) as string;
+          } catch {
+            /* evento parziale o non valido: ignora */
+          }
+        }
         setMessaggi([...storico, { ruolo: "assistente", contenuto: acc }]);
       }
       if (!acc) {
