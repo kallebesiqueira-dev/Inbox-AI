@@ -38,7 +38,9 @@ export function Dashboard() {
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           <Loader2 className="size-6 animate-spin" />
         </div>
-      ) : isError || !data ? (
+      ) : isError || !data?.metriche || !data?.oreMensili ? (
+        // Difensivo: se la risposta non ha la forma attesa (es. backend non
+        // ancora aggiornato) si mostra l'errore invece di far crashare l'app.
         <div className="flex h-64 flex-col items-center justify-center gap-2 text-muted-foreground">
           <AlertCircle className="size-6 text-destructive" />
           <p className="text-sm">Impossibile caricare i dati della dashboard.</p>

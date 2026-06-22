@@ -29,7 +29,7 @@ export function InboxPage() {
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           <Loader2 className="size-6 animate-spin" />
         </div>
-      ) : isError || !email ? (
+      ) : isError || !Array.isArray(email) ? (
         <div className="flex h-64 flex-col items-center justify-center gap-2 text-muted-foreground">
           <AlertCircle className="size-6 text-destructive" />
           <p className="text-sm">Impossibile caricare le email.</p>
