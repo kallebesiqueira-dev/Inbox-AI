@@ -67,9 +67,6 @@ export function Chat() {
       <div className="flex-1 overflow-y-auto">
         {vuota ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-soft">
-              <Sparkles className="size-8" />
-            </span>
             <h2 className="text-2xl font-semibold tracking-tight">
               Come posso aiutarti oggi?
             </h2>

@@ -2,6 +2,8 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import { isProd } from "../config/env.js";
 import { analizzaEmail, generaOfferta, chat } from "../controllers/ai.controller.js";
+import { kpi } from "../controllers/dashboard.controller.js";
+import { elenca as elencaInbox } from "../controllers/inbox.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
 import { aiLimiter } from "../middleware/rateLimit.js";
 import authRouter from "./auth.routes.js";
@@ -30,19 +32,15 @@ router.use("/offerte", requireAuth, csrfProtection, offerteRouter);
 router.use("/crm", requireAuth, csrfProtection, opportunitaRouter);
 router.use("/approvazioni", requireAuth, csrfProtection, approvazioneRouter);
 
+// Inbox (sola lettura, protetta)
+router.get("/inbox", requireAuth, elencaInbox);
+
 // Funzionalità AI (protette + rate limit)
 router.post("/ai/analizza-email", requireAuth, csrfProtection, aiLimiter, analizzaEmail);
 router.post("/ai/genera-offerta", requireAuth, csrfProtection, aiLimiter, generaOfferta);
 router.post("/ai/chat", requireAuth, csrfProtection, aiLimiter, chat);
 
-// KPI di esempio per la dashboard (protetti)
-router.get("/dashboard/kpi", requireAuth, (_req, res) => {
-  res.json({
-    emailElaborate: 1284,
-    offerteGenerate: 86,
-    opportunitaAperte: 37,
-    oreRisparmiate: 142,
-  });
-});
+// KPI, serie mensile e attività della dashboard (protetti)
+router.get("/dashboard/kpi", requireAuth, kpi);
 
 export default router;

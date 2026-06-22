@@ -41,6 +41,10 @@ professionale, con KPI in tempo reale.
 L'interfaccia è interamente in **italiano** e segue la palette **Deep Petroleum** per una
 resa sobria e professionale.
 
+Oltre all'area di lavoro autenticata è presente un **sito pubblico** di presentazione
+(landing, funzionalità e **documentazione con tutorial**). Dentro l'app, una **ricerca
+rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'uso quotidiano.
+
 ## Anteprima
 
 ### Dashboard — panoramica operativa in tempo reale
@@ -119,6 +123,11 @@ provider, il modello o il brand utilizzato: nessun nome di modello o fornitore �
 al client. Sostituire o aggiungere un provider significa implementare l'interfaccia
 `AIProvider` senza toccare il resto dell'applicazione.
 
+L'**Assistente** è una chat conversazionale con risposta in **streaming (SSE)**.
+L'implementazione di riferimento è euristica e locale; il provider `groq` usa un LLM reale
+con **validazione dell'output** (`zod`) e **fallback automatico** all'euristica in caso di
+errore, così gli endpoint restano sempre disponibili.
+
 ## Avvio rapido
 
 ```bash
@@ -171,13 +180,14 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 ## Sicurezza
 
 - **Sessioni** con cookie firmato (`HttpOnly`), protezione **CSRF** double-submit per le
-  richieste che modificano lo stato.
-- **CORS** con allowlist esplicita (`CLIENT_URL`) più i deploy di anteprima `*.vercel.app`.
+  richieste che modificano lo stato, e **revoca lato server** del token al logout (denylist per `jti`).
+- **CORS** con allowlist esplicita (`CLIENT_URL`); le anteprime `*.vercel.app` sono ammesse
+  solo se `VERCEL_PROJECT` è configurato (nessun wildcard per impostazione predefinita).
 - **Helmet** per gli header di sicurezza HTTP.
-- **Rate limiting** sulle rotte sensibili.
+- **Rate limiting** sulle rotte sensibili (autenticazione e AI).
 - **Validazione input** con `zod` su tutti i payload.
 - **Secret obbligatori in produzione** (`MONGODB_URI`, `JWT_SECRET`): l'avvio si interrompe
-  se mancanti.
+  se mancanti; `JWT_SECRET` deve essere lungo almeno 32 caratteri.
 - Il provider AI e le sue chiavi restano **lato server**, non raggiungibili dal client.
 
 ## Deploy
