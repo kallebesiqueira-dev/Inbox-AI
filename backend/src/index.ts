@@ -35,7 +35,15 @@ app.use(
       if (!origin) return cb(null, true);
       try {
         const host = new URL(origin).hostname;
-        if (consentite.includes(origin) || anteprimaVercel?.test(host)) {
+        // In sviluppo accetta qualunque porta locale: il dev server di Vite può
+        // ripiegare su 5174/5175… se la 5173 è occupata, senza rompere il login.
+        const localeDev =
+          !isProd && (host === "localhost" || host === "127.0.0.1");
+        if (
+          localeDev ||
+          consentite.includes(origin) ||
+          anteprimaVercel?.test(host)
+        ) {
           return cb(null, true);
         }
       } catch {
