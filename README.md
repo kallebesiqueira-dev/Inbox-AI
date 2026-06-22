@@ -47,8 +47,23 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 
 ## Anteprima
 
+### Sito pubblico — presentazione del servizio
+![Landing](docs/screenshots/landing.png)
+
+### Funzionalità — i moduli in dettaglio
+![Funzionalità](docs/screenshots/funzionalita.png)
+
+### Documentazione — tutorial e spiegazioni
+![Documentazione](docs/screenshots/documentazione.png)
+
+### Assistente AI — chat conversazionale in streaming
+![Assistente](docs/screenshots/assistente.png)
+
 ### Dashboard — panoramica operativa in tempo reale
 ![Dashboard](docs/screenshots/dashboard.png)
+
+### Ricerca rapida — command palette (Ctrl/⌘ K)
+![Ricerca](docs/screenshots/ricerca.png)
 
 ### Inbox — email analizzate e classificate automaticamente
 ![Inbox](docs/screenshots/inbox.png)
