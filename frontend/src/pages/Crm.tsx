@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/Avatar";
+import { EditableText } from "@/components/EditableText";
 import { toast } from "@/components/ui/toast";
 import { formatEuro } from "@/lib/utils";
 import {
@@ -126,7 +127,12 @@ export function Crm() {
                                 aggiorna.mutate({ id: o.id, avatar: dataUrl })
                               }
                             />
-                            <p className="min-w-0 truncate font-medium">{o.cliente}</p>
+                            <EditableText
+                              valore={o.cliente}
+                              ariaLabel="Modifica cliente"
+                              className="min-w-0 font-medium"
+                              onSalva={(v) => aggiorna.mutate({ id: o.id, cliente: v })}
+                            />
                           </div>
                           <button
                             onClick={() =>
@@ -140,7 +146,16 @@ export function Crm() {
                             <Trash2 className="size-4" />
                           </button>
                         </div>
-                        <p className="mt-2 text-sm text-primary">{formatEuro(o.valore)}</p>
+                        <EditableText
+                          valore={o.valore}
+                          display={formatEuro(o.valore)}
+                          tipo="number"
+                          ariaLabel="Modifica valore"
+                          className="mt-2 text-sm text-primary"
+                          onSalva={(v) =>
+                            aggiorna.mutate({ id: o.id, valore: Number(v) || 0 })
+                          }
+                        />
                         <select
                           value={o.fase}
                           onChange={(e) =>

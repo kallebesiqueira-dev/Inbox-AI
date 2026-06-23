@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EditableText } from "@/components/EditableText";
 import { toast } from "@/components/ui/toast";
 import {
   useApprovazioni,
@@ -68,7 +69,12 @@ export function Approvazioni() {
                       <Badge variant="accent">{r.tipo}</Badge>
                       <Badge variant="warning">{r.fase}</Badge>
                     </div>
-                    <p className="mt-2 font-medium">{r.oggetto}</p>
+                    <EditableText
+                      valore={r.oggetto}
+                      ariaLabel="Modifica oggetto"
+                      className="mt-2 font-medium"
+                      onSalva={(v) => aggiorna.mutate({ id: r.id, oggetto: v })}
+                    />
                     <p className="text-xs text-muted-foreground">
                       Richiesto da: {r.richiedente}
                     </p>

@@ -30,10 +30,13 @@ export function useApprovazioni() {
 export function useAggiornaApprovazione() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, fase }: { id: string; fase: FaseApprovazione }) =>
+    mutationFn: ({
+      id,
+      ...patch
+    }: { id: string } & Partial<Pick<Approvazione, "oggetto" | "fase">>) =>
       apiFetch<Approvazione>(`/approvazioni/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ fase }),
+        body: JSON.stringify(patch),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });

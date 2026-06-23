@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EditableText } from "@/components/EditableText";
 import { toast } from "@/components/ui/toast";
 import { formatEuro, formatData } from "@/lib/utils";
 import {
@@ -134,8 +135,29 @@ export function Offerte() {
                     className="border-b border-border last:border-0 hover:bg-surface"
                   >
                     <td className="p-4 font-medium">#{o.numero}</td>
-                    <td className="p-4">{o.cliente}</td>
-                    <td className="p-4">{formatEuro(o.importo)}</td>
+                    <td className="p-4">
+                      <EditableText
+                        valore={o.cliente}
+                        ariaLabel={`Modifica cliente offerta ${o.numero}`}
+                        onSalva={(v) =>
+                          aggiorna.mutate({ id: o.id, patch: { cliente: v } })
+                        }
+                      />
+                    </td>
+                    <td className="p-4">
+                      <EditableText
+                        valore={o.importo}
+                        display={formatEuro(o.importo)}
+                        tipo="number"
+                        ariaLabel={`Modifica importo offerta ${o.numero}`}
+                        onSalva={(v) =>
+                          aggiorna.mutate({
+                            id: o.id,
+                            patch: { importo: Number(v) || 0 },
+                          })
+                        }
+                      />
+                    </td>
                     <td className="p-4">
                       <select
                         value={o.stato}
