@@ -1,5 +1,16 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 
+/**
+ * Risveglia il backend appena il sito viene aperto (utile su hosting con
+ * "cold start", es. Render free): così, quando l'utente accede, il servizio è
+ * già attivo. Fire-and-forget, non blocca né influenza la UI.
+ */
+export function warmup() {
+  fetch(`${API_URL}/api/health`, { credentials: "omit", cache: "no-store" }).catch(
+    () => {}
+  );
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
