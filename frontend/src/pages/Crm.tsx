@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/Avatar";
+import { toast } from "@/components/ui/toast";
 import { formatEuro } from "@/lib/utils";
 import {
   useOpportunita,
@@ -128,7 +129,11 @@ export function Crm() {
                             <p className="min-w-0 truncate font-medium">{o.cliente}</p>
                           </div>
                           <button
-                            onClick={() => elimina.mutate(o.id)}
+                            onClick={() =>
+                              elimina.mutate(o.id, {
+                                onSuccess: () => toast("Spostato nel cestino."),
+                              })
+                            }
                             aria-label={`Elimina ${o.cliente}`}
                             className="shrink-0 text-muted-foreground hover:text-destructive"
                           >

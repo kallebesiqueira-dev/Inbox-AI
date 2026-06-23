@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/toast";
 import { formatEuro, formatData } from "@/lib/utils";
 import {
   useOfferte,
@@ -164,7 +165,11 @@ export function Offerte() {
                         size="icon"
                         aria-label={`Elimina offerta ${o.numero}`}
                         disabled={elimina.isPending}
-                        onClick={() => elimina.mutate(o.id)}
+                        onClick={() =>
+                          elimina.mutate(o.id, {
+                            onSuccess: () => toast("Spostato nel cestino."),
+                          })
+                        }
                       >
                         <Trash2 className="size-4 text-destructive" />
                       </Button>

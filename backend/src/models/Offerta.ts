@@ -19,6 +19,8 @@ const offertaSchema = new Schema(
     importo: { type: Number, required: true, min: 0 },
     stato: { type: String, enum: STATI_OFFERTA, default: "Bozza" },
     data: { type: Date, default: Date.now },
+    // Soft delete: se valorizzato, l'elemento è nel cestino.
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

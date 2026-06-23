@@ -13,6 +13,9 @@ export function controllerCrud<
     async elenca(_req: Request, res: Response) {
       res.json(await crud.elenca());
     },
+    async cestino(_req: Request, res: Response) {
+      res.json(await crud.elencaCestino());
+    },
     async crea(req: Request, res: Response) {
       const p = schema.safeParse(req.body);
       if (!p.success) {
@@ -35,6 +38,17 @@ export function controllerCrud<
     },
     async elimina(req: Request, res: Response) {
       const ok = await crud.elimina(req.params.id);
+      if (!ok) return res.status(404).json({ messaggio: "Risorsa non trovata." });
+      res.status(204).end();
+    },
+    async ripristina(req: Request, res: Response) {
+      const ripristinato = await crud.ripristina(req.params.id);
+      if (!ripristinato)
+        return res.status(404).json({ messaggio: "Risorsa non trovata." });
+      res.json(ripristinato);
+    },
+    async eliminaDefinitivo(req: Request, res: Response) {
+      const ok = await crud.eliminaDefinitivo(req.params.id);
       if (!ok) return res.status(404).json({ messaggio: "Risorsa non trovata." });
       res.status(204).end();
     },

@@ -15,6 +15,8 @@ const opportunitaSchema = new Schema(
     fase: { type: String, enum: FASI_CRM, default: "Nuovo" },
     // Foto del cliente come data URL (immagine ridimensionata lato client).
     avatar: { type: String },
+    // Soft delete: se valorizzato, l'elemento è nel cestino.
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -4,6 +4,7 @@ import {
   FileText,
   Users,
   CheckSquare,
+  Trash2,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -21,5 +22,6 @@ export const navItems: NavItem[] = [
   { to: "/app/offerte", label: "Offerte", icon: FileText },
   { to: "/app/crm", label: "CRM", icon: Users },
   { to: "/app/approvazioni", label: "Approvazioni", icon: CheckSquare },
+  { to: "/app/cestino", label: "Cestino", icon: Trash2 },
   { to: "/app/impostazioni", label: "Impostazioni", icon: Settings },
 ];

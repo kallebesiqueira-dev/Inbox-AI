@@ -32,6 +32,9 @@ const Approvazioni = lazy(() =>
 const Impostazioni = lazy(() =>
   import("@/pages/Impostazioni").then((m) => ({ default: m.Impostazioni }))
 );
+const Cestino = lazy(() =>
+  import("@/pages/Cestino").then((m) => ({ default: m.Cestino }))
+);
 const Login = lazy(() => import("@/pages/Login").then((m) => ({ default: m.Login })));
 const NotFound = lazy(() =>
   import("@/pages/NotFound").then((m) => ({ default: m.NotFound }))
@@ -67,6 +70,7 @@ export default function App() {
             <Route path="offerte" element={<Offerte />} />
             <Route path="crm" element={<Crm />} />
             <Route path="approvazioni" element={<Approvazioni />} />
+            <Route path="cestino" element={<Cestino />} />
             <Route path="impostazioni" element={<Impostazioni />} />
           </Route>
         </Route>

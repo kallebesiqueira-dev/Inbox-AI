@@ -20,6 +20,8 @@ const approvazioneSchema = new Schema(
     oggetto: { type: String, required: true, trim: true },
     fase: { type: String, enum: FASI_APPROVAZIONE, default: "Revisione" },
     richiedente: { type: String, default: "Sistema AI", trim: true },
+    // Soft delete: se valorizzato, l'elemento è nel cestino.
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

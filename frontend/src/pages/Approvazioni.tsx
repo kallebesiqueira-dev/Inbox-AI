@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/toast";
 import {
   useApprovazioni,
   useAggiornaApprovazione,
@@ -77,7 +78,11 @@ export function Approvazioni() {
                       variant="outline"
                       size="sm"
                       disabled={elimina.isPending}
-                      onClick={() => elimina.mutate(r.id)}
+                      onClick={() =>
+                        elimina.mutate(r.id, {
+                          onSuccess: () => toast("Spostato nel cestino."),
+                        })
+                      }
                     >
                       <X className="size-4" /> Rifiuta
                     </Button>
