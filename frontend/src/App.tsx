@@ -19,7 +19,6 @@ const Documentazione = lazy(() =>
 const Dashboard = lazy(() =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }))
 );
-const Chat = lazy(() => import("@/pages/Chat").then((m) => ({ default: m.Chat })));
 const InboxPage = lazy(() =>
   import("@/pages/Inbox").then((m) => ({ default: m.InboxPage }))
 );
@@ -64,7 +63,6 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="assistente" element={<Chat />} />
             <Route path="inbox" element={<InboxPage />} />
             <Route path="offerte" element={<Offerte />} />
             <Route path="crm" element={<Crm />} />

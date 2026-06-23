@@ -6,6 +6,7 @@ import { useMe, useLogout } from "@/hooks/useAuth";
 import { useCommandPalette } from "@/components/command/CommandPalette";
 import { NotificationsBell } from "@/components/notifications/Notifications";
 import { toast } from "@/components/ui/toast";
+import { Avatar } from "@/components/Avatar";
 
 interface TopbarProps {
   onOpenMenu: () => void;
@@ -13,16 +14,6 @@ interface TopbarProps {
 
 const isMac =
   typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
-
-function iniziali(nome?: string) {
-  if (!nome) return "IA";
-  return nome
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 export function Topbar({ onOpenMenu }: TopbarProps) {
   const { data: utente } = useMe();
@@ -104,9 +95,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
                 {utente?.email ?? "Organizzazione"}
               </p>
             </div>
-            <div className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {iniziali(utente?.nome)}
-            </div>
+            <Avatar src={utente?.avatar} nome={utente?.nome} className="size-9" />
             <ChevronDown className="hidden size-4 text-muted-foreground sm:block" />
           </button>
 

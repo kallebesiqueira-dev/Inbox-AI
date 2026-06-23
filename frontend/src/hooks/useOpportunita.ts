@@ -16,12 +16,14 @@ export interface Opportunita {
   cliente: string;
   valore: number;
   fase: FaseCrm;
+  avatar?: string;
 }
 
 export interface NuovaOpportunita {
   cliente: string;
   valore: number;
   fase?: FaseCrm;
+  avatar?: string;
 }
 
 const KEY = ["crm"];
@@ -48,10 +50,10 @@ export function useCreaOpportunita() {
 export function useAggiornaOpportunita() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, fase }: { id: string; fase: FaseCrm }) =>
+    mutationFn: ({ id, ...patch }: { id: string } & Partial<NuovaOpportunita>) =>
       apiFetch<Opportunita>(`/crm/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({ fase }),
+        body: JSON.stringify(patch),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });

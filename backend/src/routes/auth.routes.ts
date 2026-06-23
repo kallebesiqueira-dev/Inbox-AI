@@ -5,6 +5,7 @@ import {
   google,
   me,
   logout,
+  aggiornaAvatar,
 } from "../controllers/auth.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
 import { authLimiter } from "../middleware/rateLimit.js";
@@ -18,6 +19,7 @@ router.post("/google", authLimiter, google);
 
 // Protette
 router.get("/me", requireAuth, me);
+router.patch("/avatar", requireAuth, csrfProtection, aggiornaAvatar);
 router.post("/logout", requireAuth, csrfProtection, logout);
 
 export default router;

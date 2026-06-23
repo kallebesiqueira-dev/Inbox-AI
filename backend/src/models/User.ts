@@ -12,6 +12,8 @@ const userSchema = new Schema(
     nome: { type: String, required: true, trim: true },
     passwordHash: { type: String },
     googleId: { type: String },
+    // Foto profilo come data URL (immagine ridimensionata lato client).
+    avatar: { type: String },
   },
   { timestamps: true }
 );

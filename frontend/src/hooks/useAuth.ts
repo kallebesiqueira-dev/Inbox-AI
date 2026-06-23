@@ -5,6 +5,7 @@ export interface Utente {
   id: string;
   email: string;
   nome: string;
+  avatar?: string;
 }
 
 /** Risposta di autenticazione: utente + token CSRF da usare negli header. */
@@ -78,6 +79,21 @@ export function useGoogleLogin() {
         body: JSON.stringify({ credential }),
       }),
     onSuccess: (utente) => qc.setQueryData(ME_KEY, memorizzaSessione(utente)),
+  });
+}
+
+export function useAggiornaAvatar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (avatar: string) =>
+      apiFetch<Utente>("/auth/avatar", {
+        method: "PATCH",
+        body: JSON.stringify({ avatar }),
+      }),
+    onSuccess: (utente) =>
+      qc.setQueryData(ME_KEY, (prev: SessioneUtente | null) =>
+        prev ? { ...prev, ...utente } : prev
+      ),
   });
 }
 

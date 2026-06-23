@@ -3,6 +3,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar } from "@/components/Avatar";
 import { formatEuro } from "@/lib/utils";
 import {
   useOpportunita,
@@ -115,16 +116,26 @@ export function Crm() {
                     <Card key={o.id} className="transition-shadow hover:shadow-card">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium">{o.cliente}</p>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Avatar
+                              src={o.avatar}
+                              nome={o.cliente}
+                              className="size-9"
+                              onUpload={(dataUrl) =>
+                                aggiorna.mutate({ id: o.id, avatar: dataUrl })
+                              }
+                            />
+                            <p className="min-w-0 truncate font-medium">{o.cliente}</p>
+                          </div>
                           <button
                             onClick={() => elimina.mutate(o.id)}
                             aria-label={`Elimina ${o.cliente}`}
-                            className="text-muted-foreground hover:text-destructive"
+                            className="shrink-0 text-muted-foreground hover:text-destructive"
                           >
                             <Trash2 className="size-4" />
                           </button>
                         </div>
-                        <p className="mt-1 text-sm text-primary">{formatEuro(o.valore)}</p>
+                        <p className="mt-2 text-sm text-primary">{formatEuro(o.valore)}</p>
                         <select
                           value={o.fase}
                           onChange={(e) =>

@@ -6,6 +6,7 @@ export interface UtenteDTO {
   id: string;
   email: string;
   nome: string;
+  avatar?: string;
 }
 
 interface UtenteInterno extends UtenteDTO {
@@ -23,7 +24,7 @@ const demo: UtenteInterno[] = [];
 const HASH_FITTIZIO = bcrypt.hashSync("inbox-ai-timing-guard", 12);
 
 function pubblico(u: UtenteInterno): UtenteDTO {
-  return { id: u.id, email: u.email, nome: u.nome };
+  return { id: u.id, email: u.email, nome: u.nome, avatar: u.avatar };
 }
 
 function fromDoc(d: UserDoc): UtenteInterno {
@@ -31,6 +32,7 @@ function fromDoc(d: UserDoc): UtenteInterno {
     id: d.id,
     email: d.email,
     nome: d.nome,
+    avatar: d.avatar ?? undefined,
     passwordHash: d.passwordHash ?? undefined,
     googleId: d.googleId ?? undefined,
   };
@@ -50,6 +52,22 @@ export async function trovaPerId(id: string): Promise<UtenteDTO | null> {
   }
   if (!mongoose.isValidObjectId(id)) return null;
   const doc = await User.findById(id);
+  return doc ? pubblico(fromDoc(doc)) : null;
+}
+
+/** Aggiorna la foto profilo (data URL) dell'utente. */
+export async function aggiornaAvatar(
+  id: string,
+  avatar: string
+): Promise<UtenteDTO | null> {
+  if (!dbAttivo()) {
+    const u = demo.find((x) => x.id === id);
+    if (!u) return null;
+    u.avatar = avatar;
+    return pubblico(u);
+  }
+  if (!mongoose.isValidObjectId(id)) return null;
+  const doc = await User.findByIdAndUpdate(id, { avatar }, { new: true });
   return doc ? pubblico(fromDoc(doc)) : null;
 }
 

@@ -8,6 +8,7 @@ export interface OpportunitaInput extends Record<string, unknown> {
   cliente: string;
   valore: number;
   fase?: FaseCrm;
+  avatar?: string;
 }
 
 export interface OpportunitaDTO {
@@ -15,6 +16,7 @@ export interface OpportunitaDTO {
   cliente: string;
   valore: number;
   fase: FaseCrm;
+  avatar?: string;
 }
 
 const seed: OpportunitaDTO[] = [
@@ -34,6 +36,7 @@ export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
     cliente: d.cliente,
     valore: d.valore,
     fase: d.fase as FaseCrm,
+    avatar: (d.avatar as string | undefined) ?? undefined,
   }),
   seed,
   demo: (input, id) => ({
@@ -41,5 +44,6 @@ export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
     cliente: input.cliente,
     valore: input.valore,
     fase: input.fase ?? "Nuovo",
+    avatar: input.avatar,
   }),
 });

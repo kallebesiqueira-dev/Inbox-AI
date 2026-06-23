@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  Sparkles,
   Inbox,
   FileText,
   Users,
@@ -18,7 +17,6 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/app/assistente", label: "Assistente", icon: Sparkles },
   { to: "/app/inbox", label: "Inbox", icon: Inbox },
   { to: "/app/offerte", label: "Offerte", icon: FileText },
   { to: "/app/crm", label: "CRM", icon: Users },

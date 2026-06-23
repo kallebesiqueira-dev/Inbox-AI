@@ -96,6 +96,29 @@ export async function google(req: Request, res: Response) {
   }
 }
 
+// Foto profilo: data URL di un'immagine, con limite di dimensione per contenere
+// il payload (l'immagine è già ridimensionata lato client).
+const avatarSchema = z.object({
+  avatar: z
+    .string()
+    .startsWith("data:image/", "Formato immagine non valido.")
+    .max(500_000, "Immagine troppo grande."),
+});
+
+export async function aggiornaAvatar(req: Request, res: Response) {
+  const parsed = avatarSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ messaggio: "Dati non validi.", errori: parsed.error.flatten().fieldErrors });
+  }
+  const utente = req.userId
+    ? await auth.aggiornaAvatar(req.userId, parsed.data.avatar)
+    : null;
+  if (!utente) return res.status(401).json({ messaggio: "Non autenticato." });
+  res.json(utente);
+}
+
 export async function me(req: Request, res: Response) {
   const utente = req.userId ? await auth.trovaPerId(req.userId) : null;
   if (!utente) {

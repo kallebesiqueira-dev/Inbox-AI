@@ -5,6 +5,7 @@ import { MobileNav } from "./MobileNav";
 import { Topbar } from "./Topbar";
 import { CommandPaletteProvider } from "@/components/command/CommandPalette";
 import { NotificationsProvider } from "@/components/notifications/Notifications";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { Toaster } from "@/components/ui/toast";
 
 export function AppLayout() {
@@ -27,6 +28,7 @@ export function AppLayout() {
             </main>
           </div>
         </div>
+        <ChatWidget />
         <Toaster />
       </NotificationsProvider>
     </CommandPaletteProvider>

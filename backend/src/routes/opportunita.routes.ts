@@ -8,6 +8,11 @@ const schema = z.object({
   cliente: z.string().min(1, "Il cliente è obbligatorio.").max(200),
   valore: z.number().nonnegative("Il valore non può essere negativo."),
   fase: z.enum(FASI_CRM).optional(),
+  avatar: z
+    .string()
+    .startsWith("data:image/", "Formato immagine non valido.")
+    .max(500_000, "Immagine troppo grande.")
+    .optional(),
 });
 
 export default rotteCrud(controllerCrud(opportunitaCrud, schema));
