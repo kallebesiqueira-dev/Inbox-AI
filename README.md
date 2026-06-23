@@ -56,7 +56,7 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 ### Documentazione — tutorial e spiegazioni
 ![Documentazione](docs/screenshots/documentazione.png)
 
-### Assistente AI — chat conversazionale in streaming
+### Assistente AI — widget di chat flottante in streaming
 ![Assistente](docs/screenshots/assistente.png)
 
 ### Dashboard — panoramica operativa in tempo reale
@@ -77,7 +77,10 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 ### Approvazioni — workflow con supervisione umana
 ![Approvazioni](docs/screenshots/approvazioni.png)
 
-### Impostazioni — organizzazione e automazioni
+### Cestino — elementi eliminati, ripristinabili
+![Cestino](docs/screenshots/cestino.png)
+
+### Impostazioni — profilo (foto), organizzazione e automazioni
 ![Impostazioni](docs/screenshots/impostazioni.png)
 
 ### Accesso
@@ -88,12 +91,13 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 | Modulo           | Descrizione |
 |------------------|-------------|
 | **Dashboard**    | KPI operativi (email elaborate, offerte generate, opportunità aperte, tempo risparmiato) e attività recenti. |
-| **Assistente**   | Chat AI conversazionale in streaming per gestire email, offerte, opportunità e approvazioni. |
+| **Assistente**   | Widget di chat AI flottante (in streaming), disponibile su ogni pagina, per gestire email, offerte, opportunità e approvazioni. |
 | **Inbox**        | Email ricevute, analizzate e classificate per categoria e priorità. |
-| **Offerte**      | Generazione automatica, modifica e versioning dei documenti commerciali (Bozza → In revisione → Approvata → Inviata). |
-| **CRM**          | Pipeline a colonne: Nuovo → In Analisi → Offerta Inviata → Negoziazione → Chiuso. |
+| **Offerte**      | Generazione automatica, **modifica in linea** e versioning dei documenti commerciali (Bozza → In revisione → Approvata → Inviata). |
+| **CRM**          | Pipeline a colonne (Nuovo → In Analisi → Offerta Inviata → Negoziazione → Chiuso); clienti con foto e campi **modificabili in linea**. |
 | **Approvazioni** | Workflow approvativi con controllo umano: Bozza → Revisione → Approvazione → Esecuzione. |
-| **Impostazioni** | Dati dell'organizzazione e configurazione delle automazioni email. |
+| **Cestino**      | Gli elementi eliminati finiscono nel cestino (soft delete): **ripristinabili** o eliminabili definitivamente. |
+| **Impostazioni** | Foto profilo, dati dell'organizzazione e configurazione delle automazioni email. |
 
 ## Stack tecnologico
 
@@ -114,7 +118,7 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 │   │   ├── components/     # UI, layout, guardie di rotta
 │   │   ├── hooks/          # Hook TanStack Query (offerte, opportunità, approvazioni, auth)
 │   │   ├── lib/            # Client API (fetch + cookie + CSRF)
-│   │   ├── pages/          # Dashboard, Assistente, Inbox, Offerte, CRM, Approvazioni, Impostazioni, Login
+│   │   ├── pages/          # Dashboard, Inbox, Offerte, CRM, Approvazioni, Cestino, Impostazioni, Login
 │   │   └── pages/marketing/ # Sito pubblico: Landing, Funzionalità, Documentazione
 │   └── public/            # logo.jpeg, icon.jpeg
 ├── backend/               # Backend Node + Express

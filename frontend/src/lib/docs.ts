@@ -68,13 +68,13 @@ export const documentazione: DocArticolo[] = [
     sezioni: [
       {
         paragrafi: [
-          "L'Assistente è una chat in tempo reale che risponde in streaming. Puoi chiedergli di riassumere email, redigere offerte, individuare opportunità prioritarie nel CRM o suggerire come velocizzare le approvazioni.",
+          "L'Assistente è un widget di chat flottante (in basso a destra), disponibile su ogni pagina, che risponde in streaming. Puoi chiedergli di riassumere email, redigere offerte, individuare opportunità prioritarie nel CRM o suggerire come velocizzare le approvazioni.",
         ],
       },
       {
         titolo: "Come usarlo",
         passi: [
-          "Apri Assistente dalla barra laterale.",
+          "Apri il widget dal pulsante in basso a destra.",
           "Scrivi la tua richiesta o scegli un suggerimento.",
           "Premi Invio per inviare (Shift+Invio per andare a capo).",
           "Usa «Nuova conversazione» per ripartire da zero.",
