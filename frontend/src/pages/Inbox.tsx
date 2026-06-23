@@ -1,8 +1,10 @@
-import { Loader2, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useInbox, type CategoriaEmail } from "@/hooks/useInbox";
+import { EmailDetail } from "@/components/inbox/EmailDetail";
+import { useInbox, type CategoriaEmail, type EmailInbox } from "@/hooks/useInbox";
 
 const categorie: Record<
   CategoriaEmail,
@@ -17,12 +19,13 @@ const categorie: Record<
 
 export function InboxPage() {
   const { data: email, isLoading, isError } = useInbox();
+  const [selezionata, setSelezionata] = useState<EmailInbox | null>(null);
 
   return (
     <div>
       <PageHeader
         title="Inbox"
-        description="Email ricevute, analizzate e classificate automaticamente"
+        description="Apri un'email per analizzarla con l'AI, generare un'offerta o creare un'opportunità"
       />
 
       {isLoading ? (
@@ -37,7 +40,14 @@ export function InboxPage() {
       ) : (
         <div className="space-y-2">
           {email.map((e) => (
-            <Card key={e.id} className="transition-shadow hover:shadow-card">
+            <Card
+              key={e.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelezionata(e)}
+              onKeyDown={(ev) => ev.key === "Enter" && setSelezionata(e)}
+              className="group cursor-pointer transition-shadow hover:shadow-card"
+            >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-sm font-semibold text-primary">
                   {e.mittente.charAt(0)}
@@ -61,7 +71,8 @@ export function InboxPage() {
                   >
                     Priorità {e.priorita}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Sparkles className="size-3 opacity-0 transition-opacity group-hover:opacity-70" />
                     {e.tempo} fa
                   </span>
                 </div>
@@ -69,6 +80,10 @@ export function InboxPage() {
             </Card>
           ))}
         </div>
+      )}
+
+      {selezionata && (
+        <EmailDetail email={selezionata} onClose={() => setSelezionata(null)} />
       )}
     </div>
   );

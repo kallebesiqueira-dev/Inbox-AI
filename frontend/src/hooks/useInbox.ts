@@ -15,6 +15,7 @@ export interface EmailInbox {
   categoria: CategoriaEmail;
   priorita: "Alta" | "Media" | "Bassa";
   tempo: string;
+  corpo: string;
 }
 
 export function useInbox() {

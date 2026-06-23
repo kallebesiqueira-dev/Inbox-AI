@@ -68,6 +68,9 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 ### Inbox — email analizzate e classificate automaticamente
 ![Inbox](docs/screenshots/inbox.png)
 
+### Automazione AI — analizza l'email, genera l'offerta, crea l'opportunità
+![Automazione AI](docs/screenshots/inbox-ai.png)
+
 ### Offerte — generazione, modifica e versioning dei documenti
 ![Offerte](docs/screenshots/offerte.png)
 
@@ -92,7 +95,7 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 |------------------|-------------|
 | **Dashboard**    | KPI operativi (email elaborate, offerte generate, opportunità aperte, tempo risparmiato) e attività recenti. |
 | **Assistente**   | Widget di chat AI flottante (in streaming), disponibile su ogni pagina, per gestire email, offerte, opportunità e approvazioni. |
-| **Inbox**        | Email ricevute, analizzate e classificate per categoria e priorità. |
+| **Inbox**        | Email ricevute, classificate per categoria/priorità; apri un'email per **analizzarla con l'AI**, **generare un'offerta** o **creare un'opportunità** nel CRM. |
 | **Offerte**      | Generazione automatica, **modifica in linea** e versioning dei documenti commerciali (Bozza → In revisione → Approvata → Inviata). |
 | **CRM**          | Pipeline a colonne (Nuovo → In Analisi → Offerta Inviata → Negoziazione → Chiuso); clienti con foto e campi **modificabili in linea**. |
 | **Approvazioni** | Workflow approvativi con controllo umano: Bozza → Revisione → Approvazione → Esecuzione. |
