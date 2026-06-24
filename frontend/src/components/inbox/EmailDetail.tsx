@@ -69,7 +69,12 @@ export function EmailDetail({
   function onSalvaOfferta() {
     if (!offerta) return;
     creaOfferta.mutate(
-      { cliente: email.mittente, importo: totale },
+      {
+        cliente: email.mittente,
+        importo: totale,
+        corpo: offerta.corpo,
+        voci: offerta.voci,
+      },
       {
         onSuccess: () => {
           toast(`Offerta creata per ${email.mittente}.`);

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Plus, Trash2, Loader2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Loader2, Sparkles, FileText } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EditableText } from "@/components/EditableText";
 import { GeneraOffertaAI } from "@/components/offerte/GeneraOffertaAI";
+import { OffertaDetail } from "@/components/offerte/OffertaDetail";
+import type { Offerta } from "@/hooks/useOfferte";
 import { toast } from "@/components/ui/toast";
 import { formatEuro, formatData } from "@/lib/utils";
 import {
@@ -32,6 +34,7 @@ export function Offerte() {
 
   const [form, setForm] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [dettaglio, setDettaglio] = useState<Offerta | null>(null);
   const [cliente, setCliente] = useState("");
   const [importo, setImporto] = useState("");
 
@@ -68,6 +71,9 @@ export function Offerte() {
       />
 
       {aiOpen && <GeneraOffertaAI onClose={() => setAiOpen(false)} />}
+      {dettaglio && (
+        <OffertaDetail offerta={dettaglio} onClose={() => setDettaglio(null)} />
+      )}
 
       {form && (
         <Card className="mb-4">
@@ -191,6 +197,14 @@ export function Offerte() {
                     </td>
                     <td className="p-4 text-muted-foreground">{formatData(o.data)}</td>
                     <td className="p-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Dettaglio offerta ${o.numero}`}
+                        onClick={() => setDettaglio(o)}
+                      >
+                        <FileText className="size-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

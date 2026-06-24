@@ -21,6 +21,12 @@ const offertaSchema = new Schema(
     importo: { type: Number, required: true, min: 0 },
     stato: { type: String, enum: STATI_OFFERTA, default: "Bozza" },
     data: { type: Date, default: Date.now },
+    // Contenuto dell'offerta generata dall'AI (per il documento/PDF).
+    corpo: { type: String, default: "" },
+    voci: {
+      type: [{ descrizione: String, importo: Number }],
+      default: [],
+    },
     // Soft delete: se valorizzato, l'elemento è nel cestino.
     deletedAt: { type: Date, default: null },
   },

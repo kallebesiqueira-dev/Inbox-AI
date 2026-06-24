@@ -11,6 +11,16 @@ const schema = z.object({
   importo: z.number().nonnegative("L'importo non può essere negativo."),
   stato: z.enum(STATI_OFFERTA).optional(),
   numero: z.string().max(50).optional(),
+  corpo: z.string().max(8000).optional(),
+  voci: z
+    .array(
+      z.object({
+        descrizione: z.string().max(300),
+        importo: z.number().finite().nonnegative(),
+      })
+    )
+    .max(20)
+    .optional(),
 });
 
 const ctrl = controllerCrud(offerteCrud, schema);

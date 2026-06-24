@@ -25,7 +25,12 @@ export function GeneraOffertaAI({ onClose }: { onClose: () => void }) {
 
   function onCrea() {
     creaOfferta.mutate(
-      { cliente: cliente.trim(), importo: totale },
+      {
+        cliente: cliente.trim(),
+        importo: totale,
+        corpo: offerta?.corpo,
+        voci: offerta?.voci,
+      },
       {
         onSuccess: () => {
           toast(`Offerta creata per ${cliente.trim()}.`);

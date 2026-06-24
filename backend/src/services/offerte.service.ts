@@ -4,11 +4,18 @@ import { creaCrud } from "./crud.js";
 
 export type Stato = (typeof STATI_OFFERTA)[number];
 
+export interface VoceOfferta {
+  descrizione: string;
+  importo: number;
+}
+
 export interface OffertaInput extends Record<string, unknown> {
   cliente: string;
   importo: number;
   stato?: Stato;
   numero?: string;
+  corpo?: string;
+  voci?: VoceOfferta[];
   data?: Date; // gestita dal modello, non dall'utente
 }
 
@@ -19,6 +26,8 @@ export interface OffertaDTO {
   importo: number;
   stato: Stato;
   data: string;
+  corpo: string;
+  voci: VoceOfferta[];
 }
 
 function generaNumero(): string {
@@ -41,6 +50,11 @@ export const offerteCrud = creaCrud<OffertaInput, OffertaDTO>({
     importo: d.importo,
     stato: d.stato as Stato,
     data: (d.data ?? new Date()).toISOString(),
+    corpo: (d.corpo as string) ?? "",
+    voci: ((d.voci as VoceOfferta[]) ?? []).map((v) => ({
+      descrizione: v.descrizione,
+      importo: v.importo,
+    })),
   }),
   semi,
   demo: (input, id) => ({
@@ -50,5 +64,7 @@ export const offerteCrud = creaCrud<OffertaInput, OffertaDTO>({
     importo: input.importo,
     stato: input.stato ?? "Bozza",
     data: new Date().toISOString(),
+    corpo: input.corpo ?? "",
+    voci: input.voci ?? [],
   }),
 });

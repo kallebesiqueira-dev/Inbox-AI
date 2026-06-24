@@ -10,6 +10,11 @@ export const STATI_OFFERTA = [
 
 export type StatoOfferta = (typeof STATI_OFFERTA)[number];
 
+export interface VoceOfferta {
+  descrizione: string;
+  importo: number;
+}
+
 export interface Offerta {
   id: string;
   numero: string;
@@ -17,12 +22,16 @@ export interface Offerta {
   importo: number;
   stato: StatoOfferta;
   data: string;
+  corpo: string;
+  voci: VoceOfferta[];
 }
 
 export interface NuovaOfferta {
   cliente: string;
   importo: number;
   stato?: StatoOfferta;
+  corpo?: string;
+  voci?: VoceOfferta[];
 }
 
 const KEY = ["offerte"];
