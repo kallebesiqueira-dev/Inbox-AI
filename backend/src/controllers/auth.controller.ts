@@ -3,7 +3,6 @@ import { z } from "zod";
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../config/env.js";
 import * as auth from "../services/auth.service.js";
-import { seedUtente } from "../services/seed.service.js";
 import {
   firmaToken,
   verificaToken,
@@ -48,7 +47,6 @@ export async function registra(req: Request, res: Response) {
   if (!utente) {
     return res.status(409).json({ messaggio: "Email già registrata." });
   }
-  await seedUtente(utente.id);
   const csrfToken = avviaSessione(res, utente.id);
   res.status(201).json({ ...utente, csrfToken });
 }
@@ -86,12 +84,11 @@ export async function google(req: Request, res: Response) {
     if (!payload?.sub || !payload.email) {
       return res.status(401).json({ messaggio: "Token Google non valido." });
     }
-    const { utente, nuovo } = await auth.daGoogle(
+    const { utente } = await auth.daGoogle(
       payload.sub,
       payload.email,
       payload.name ?? payload.email
     );
-    if (nuovo) await seedUtente(utente.id);
     const csrfToken = avviaSessione(res, utente.id);
     res.json({ ...utente, csrfToken });
   } catch {

@@ -71,7 +71,7 @@ export async function kpi(req: Request, res: Response) {
     },
     oreMensili: MESI.map((mese, i) => ({
       mese,
-      valore: Math.max(1, Math.round(CURVA[i] * oreRisparmiate)),
+      valore: Math.round(CURVA[i] * oreRisparmiate),
     })),
     attivita,
   });
