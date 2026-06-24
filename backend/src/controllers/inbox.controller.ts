@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
+import * as gmail from "../services/gmail.service.js";
 
-// Email di esempio servite dal backend (in un'integrazione reale arriverebbero
-// dalla casella collegata, già analizzate e classificate dal provider AI).
+// Email di esempio: usate come fallback quando Gmail non è collegato.
 const EMAIL = [
   { id: "1", mittente: "Rossi S.p.A.", oggetto: "Richiesta preventivo fornitura", categoria: "Commerciale", priorita: "Alta", tempo: "5 min", corpo: "Buongiorno, siamo interessati a una fornitura di 200 unità del vostro prodotto di punta. Avremmo bisogno di un preventivo dettagliato con tempi di consegna entro fine mese. Restiamo in attesa di un vostro riscontro." },
   { id: "2", mittente: "Bianchi SRL", oggetto: "Conferma ordine #4821", categoria: "Amministrazione", priorita: "Media", tempo: "32 min", corpo: "Vi confermiamo l'ordine #4821. Vi preghiamo di inviare la fattura all'indirizzo amministrativo e di procedere con la spedizione standard." },
@@ -11,6 +11,15 @@ const EMAIL = [
   { id: "6", mittente: "Newsletter", oggetto: "Aggiornamenti di settore", categoria: "Altro", priorita: "Bassa", tempo: "4 ore", corpo: "Le ultime novità del settore e gli aggiornamenti normativi del mese. Clicca per leggere l'articolo completo." },
 ];
 
-export function elenca(_req: Request, res: Response) {
+export async function elenca(req: Request, res: Response) {
+  // Se l'utente ha collegato Gmail, mostra le email reali; altrimenti i dati demo.
+  if (req.userId) {
+    try {
+      const reali = await gmail.leggiEmail(req.userId);
+      if (reali) return res.json(reali);
+    } catch (err) {
+      console.error("[Inbox] lettura Gmail fallita, uso i dati demo:", err);
+    }
+  }
   res.json(EMAIL);
 }

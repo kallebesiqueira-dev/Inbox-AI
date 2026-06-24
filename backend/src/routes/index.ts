@@ -4,6 +4,11 @@ import { isProd } from "../config/env.js";
 import { analizzaEmail, generaOfferta, chat } from "../controllers/ai.controller.js";
 import { kpi } from "../controllers/dashboard.controller.js";
 import { elenca as elencaInbox } from "../controllers/inbox.controller.js";
+import {
+  connetti as connettiGmail,
+  stato as statoGmail,
+  disconnetti as disconnettiGmail,
+} from "../controllers/gmail.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
 import { aiLimiter } from "../middleware/rateLimit.js";
 import authRouter from "./auth.routes.js";
@@ -34,6 +39,11 @@ router.use("/approvazioni", requireAuth, csrfProtection, approvazioneRouter);
 
 // Inbox (sola lettura, protetta)
 router.get("/inbox", requireAuth, elencaInbox);
+
+// Integrazione Gmail (collegamento OAuth + lettura email reali)
+router.get("/gmail/stato", requireAuth, statoGmail);
+router.post("/gmail/connetti", requireAuth, csrfProtection, connettiGmail);
+router.post("/gmail/disconnetti", requireAuth, csrfProtection, disconnettiGmail);
 
 // Funzionalità AI (protette + rate limit)
 router.post("/ai/analizza-email", requireAuth, csrfProtection, aiLimiter, analizzaEmail);

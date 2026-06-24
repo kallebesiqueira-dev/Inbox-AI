@@ -4,7 +4,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmailDetail } from "@/components/inbox/EmailDetail";
+import { ConnettiGmail } from "@/components/gmail/ConnettiGmail";
 import { useInbox, type CategoriaEmail, type EmailInbox } from "@/hooks/useInbox";
+import { useStatoGmail } from "@/hooks/useGmail";
 
 const categorie: Record<
   CategoriaEmail,
@@ -19,14 +21,27 @@ const categorie: Record<
 
 export function InboxPage() {
   const { data: email, isLoading, isError } = useInbox();
+  const { data: gmail } = useStatoGmail();
   const [selezionata, setSelezionata] = useState<EmailInbox | null>(null);
 
   return (
     <div>
       <PageHeader
         title="Inbox"
-        description="Apri un'email per analizzarla con l'AI, generare un'offerta o creare un'opportunità"
+        description={
+          gmail?.connesso
+            ? `Email reali da ${gmail.email}. Apri un'email per analizzarla con l'AI.`
+            : "Apri un'email per analizzarla con l'AI, generare un'offerta o creare un'opportunità"
+        }
+        action={<ConnettiGmail compatto />}
       />
+
+      {!gmail?.connesso && (
+        <div className="mb-4 rounded-xl border border-border bg-surface/50 px-4 py-3 text-sm text-muted-foreground">
+          Stai vedendo email di esempio. Collega Gmail per analizzare la tua casella
+          reale.
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">

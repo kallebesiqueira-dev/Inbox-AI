@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar } from "@/components/Avatar";
+import { ConnettiGmail } from "@/components/gmail/ConnettiGmail";
 import {
   useMe,
   useAggiornaAvatar,
@@ -83,6 +84,18 @@ export function Impostazioni() {
                 Clicca sulla foto per cambiarla (JPG o PNG).
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Casella email (Gmail)</CardTitle>
+            <CardDescription>
+              Collega Gmail per analizzare le tue email reali con l'AI
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ConnettiGmail />
           </CardContent>
         </Card>
 

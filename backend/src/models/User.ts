@@ -16,6 +16,9 @@ const userSchema = new Schema(
     avatar: { type: String },
     // Impostazioni dell'organizzazione (nome/email azienda + automazioni email).
     impostazioni: { type: Schema.Types.Mixed },
+    // Gmail collegato: refresh token cifrato (AES-256-GCM) + indirizzo per la UI.
+    gmailToken: { type: String },
+    gmailEmail: { type: String },
   },
   { timestamps: true }
 );
