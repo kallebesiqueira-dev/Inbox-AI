@@ -9,6 +9,7 @@ import {
 } from "../controllers/ai.controller.js";
 import { kpi } from "../controllers/dashboard.controller.js";
 import { elenca as elencaInbox } from "../controllers/inbox.controller.js";
+import { elenca as elencaNotifiche } from "../controllers/notifiche.controller.js";
 import {
   connetti as connettiGmail,
   stato as statoGmail,
@@ -45,6 +46,7 @@ router.use("/approvazioni", requireAuth, csrfProtection, approvazioneRouter);
 
 // Inbox (sola lettura, protetta)
 router.get("/inbox", requireAuth, elencaInbox);
+router.get("/notifiche", requireAuth, elencaNotifiche);
 
 // Integrazione Gmail (collegamento OAuth + lettura email reali)
 router.get("/gmail/stato", requireAuth, statoGmail);

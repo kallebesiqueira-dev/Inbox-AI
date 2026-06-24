@@ -36,12 +36,6 @@ export function InboxPage() {
         action={<ConnettiGmail compatto />}
       />
 
-      {!gmail?.connesso && (
-        <div className="mb-4 rounded-xl border border-border bg-surface/50 px-4 py-3 text-sm text-muted-foreground">
-          Stai vedendo email di esempio. Collega Gmail per analizzare la tua casella
-          reale.
-        </div>
-      )}
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -51,6 +45,16 @@ export function InboxPage() {
         <div className="flex h-64 flex-col items-center justify-center gap-2 text-muted-foreground">
           <AlertCircle className="size-6 text-destructive" />
           <p className="text-sm">Impossibile caricare le email.</p>
+        </div>
+      ) : email.length === 0 ? (
+        <div className="flex h-64 flex-col items-center justify-center gap-3 text-center text-muted-foreground">
+          <Sparkles className="size-7 text-secondary" />
+          <p className="max-w-sm text-sm">
+            {gmail?.connesso
+              ? "Nessuna email recente nella tua casella."
+              : "Collega Gmail per vedere e analizzare le tue email reali con l'AI."}
+          </p>
+          {!gmail?.connesso && <ConnettiGmail />}
         </div>
       ) : (
         <div className="space-y-2">

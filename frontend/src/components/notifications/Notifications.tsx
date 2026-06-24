@@ -2,26 +2,28 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export interface Notifica {
-  id: number;
+  id: string;
   titolo: string;
   descrizione: string;
-  tempo: string;
-  letta: boolean;
 }
 
 interface CtxValue {
   notifiche: Notifica[];
   nonLette: number;
+  letta: (id: string) => boolean;
   segnaTutteLette: () => void;
-  segnaLetta: (id: number) => void;
+  segnaLetta: (id: string) => void;
 }
 
 const Ctx = createContext<CtxValue | null>(null);
@@ -32,56 +34,35 @@ export function useNotifiche(): CtxValue {
   return c;
 }
 
-// Notifiche di esempio: in un'integrazione reale arriverebbero dal backend.
-const INIZIALI: Notifica[] = [
-  {
-    id: 1,
-    titolo: "Nuova email commerciale",
-    descrizione: "Rossi S.p.A. ha inviato una richiesta di preventivo.",
-    tempo: "5 min fa",
-    letta: false,
-  },
-  {
-    id: 2,
-    titolo: "Offerta generata",
-    descrizione: "L'offerta #2025-086 è pronta per la revisione.",
-    tempo: "18 min fa",
-    letta: false,
-  },
-  {
-    id: 3,
-    titolo: "Approvazione richiesta",
-    descrizione: "Un'offerta è in attesa del tuo via libera.",
-    tempo: "1 ora fa",
-    letta: true,
-  },
-];
-
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
-  const [notifiche, setNotifiche] = useState<Notifica[]>(INIZIALI);
-  const nonLette = notifiche.filter((n) => !n.letta).length;
+  // Notifiche reali derivate dall'attività dell'utente.
+  const { data } = useQuery({
+    queryKey: ["notifiche"],
+    queryFn: () => apiFetch<Notifica[]>("/notifiche"),
+    refetchInterval: 60_000,
+  });
+  const notifiche = useMemo(() => data ?? [], [data]);
+  // Stato "letta" gestito lato client per sessione.
+  const [lette, setLette] = useState<Set<string>>(new Set());
 
-  const segnaTutteLette = () =>
-    setNotifiche((prev) => prev.map((n) => ({ ...n, letta: true })));
-  const segnaLetta = (id: number) =>
-    setNotifiche((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, letta: true } : n))
-    );
+  const value: CtxValue = {
+    notifiche,
+    nonLette: notifiche.filter((n) => !lette.has(n.id)).length,
+    letta: (id) => lette.has(id),
+    segnaTutteLette: () => setLette(new Set(notifiche.map((n) => n.id))),
+    segnaLetta: (id) => setLette((prev) => new Set(prev).add(id)),
+  };
 
-  return (
-    <Ctx.Provider value={{ notifiche, nonLette, segnaTutteLette, segnaLetta }}>
-      {children}
-    </Ctx.Provider>
-  );
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 /** Campanella con badge e pannello a tendina. */
 export function NotificationsBell() {
-  const { notifiche, nonLette, segnaTutteLette, segnaLetta } = useNotifiche();
+  const { notifiche, nonLette, letta, segnaTutteLette, segnaLetta } =
+    useNotifiche();
   const [aperto, setAperto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Chiude al click esterno o con Esc.
   useEffect(() => {
     if (!aperto) return;
     function onClick(e: MouseEvent) {
@@ -143,16 +124,13 @@ export function NotificationsBell() {
                   <span
                     className={cn(
                       "mt-1.5 size-2 shrink-0 rounded-full",
-                      n.letta ? "bg-transparent" : "bg-accent"
+                      letta(n.id) ? "bg-transparent" : "bg-accent"
                     )}
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-medium">{n.titolo}</span>
                     <span className="block text-sm text-muted-foreground">
                       {n.descrizione}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {n.tempo}
                     </span>
                   </span>
                 </button>
