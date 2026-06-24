@@ -14,6 +14,7 @@
     "dev:frontend": "npm --workspace frontend run dev",
     "dev:backend": "npm --workspace backend run dev",
     "build": "npm --workspace frontend run build && npm --workspace backend run build",
+    "test": "npm --workspace backend run test",
     "lint": "npm run lint --workspaces --if-present",
     "install:all": "npm install"
   },

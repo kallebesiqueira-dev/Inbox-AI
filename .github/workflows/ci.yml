@@ -6,14 +6,34 @@ on:
   pull_request:
 
 jobs:
-  build:
+  build-test:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
+      - name: Install
+        run: npm ci
+      - name: Build (frontend + backend)
+        run: npm run build
+      - name: Test (backend)
+        run: npm test
+
+  deploy:
+    name: Deploy backend (Render)
+    needs: build-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            curl -fsS -X POST "$HOOK" && echo "Deploy avviato."
+          else
+            echo "RENDER_DEPLOY_HOOK non configurato: salto il deploy."
+          fi
