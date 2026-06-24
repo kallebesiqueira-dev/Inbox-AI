@@ -19,6 +19,9 @@ const userSchema = new Schema(
     // Gmail collegato: refresh token cifrato (AES-256-GCM) + indirizzo per la UI.
     gmailToken: { type: String },
     gmailEmail: { type: String },
+    // Reset password: hash del token (mai in chiaro) + scadenza.
+    resetTokenHash: { type: String },
+    resetTokenExp: { type: Date },
   },
   { timestamps: true }
 );

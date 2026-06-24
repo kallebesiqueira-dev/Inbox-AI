@@ -124,6 +124,36 @@ export function useAggiornaImpostazioni() {
   });
 }
 
+export function usePasswordDimenticata() {
+  return useMutation({
+    mutationFn: (email: string) =>
+      apiFetch<{ messaggio: string }>("/auth/password-dimenticata", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (input: { token: string; password: string }) =>
+      apiFetch<{ aggiornata: boolean }>("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+  });
+}
+
+export function useCambiaPassword() {
+  return useMutation({
+    mutationFn: (input: { passwordAttuale: string; nuovaPassword: string }) =>
+      apiFetch<{ aggiornata: boolean }>("/auth/cambia-password", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+  });
+}
+
 export function useLogout() {
   const qc = useQueryClient();
   return useMutation({

@@ -22,6 +22,9 @@ const schema = z.object({
   AI_API_KEY: z.string().optional(),
   // Modello del provider AI (es. per Groq: "llama-3.3-70b-versatile").
   AI_MODEL: z.string().optional(),
+  // SMTP per le email di sistema (es. reset password): Gmail + "password per le app".
+  GMAIL_APP_USER: z.string().optional(),
+  GMAIL_APP_PASSWORD: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { OAuth2Client } from "google-auth-library";
 import { env } from "../config/env.js";
 import * as auth from "../services/auth.service.js";
+import { inviaEmailSistema } from "../services/mailer.js";
 import {
   firmaToken,
   verificaToken,
@@ -156,6 +157,75 @@ export async function me(req: Request, res: Response) {
     res.cookie(COOKIE_CSRF, csrfToken, opzioniCsrf());
   }
   res.json({ ...utente, csrfToken });
+}
+
+const cambiaPasswordSchema = z.object({
+  passwordAttuale: z.string().min(1, "Password attuale obbligatoria."),
+  nuovaPassword: z.string().min(8, "La nuova password deve avere almeno 8 caratteri."),
+});
+
+export async function cambiaPassword(req: Request, res: Response) {
+  const parsed = cambiaPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ messaggio: "Dati non validi.", errori: parsed.error.flatten().fieldErrors });
+  }
+  const ok = req.userId
+    ? await auth.cambiaPassword(
+        req.userId,
+        parsed.data.passwordAttuale,
+        parsed.data.nuovaPassword
+      )
+    : false;
+  if (!ok) {
+    return res.status(400).json({ messaggio: "Password attuale non corretta." });
+  }
+  res.json({ aggiornata: true });
+}
+
+const dimenticataSchema = z.object({ email: z.string().email("Email non valida.") });
+
+export async function passwordDimenticata(req: Request, res: Response) {
+  const parsed = dimenticataSchema.safeParse(req.body);
+  // Risposta sempre 200 per non rivelare se l'email esiste.
+  if (parsed.success) {
+    const token = await auth.creaTokenReset(parsed.data.email);
+    if (token) {
+      const base = env.CLIENT_URL.split(",")[0].trim();
+      const link = `${base}/reset-password?token=${token}`;
+      const html = `
+        <p>Hai richiesto il reset della password di Inbox AI.</p>
+        <p><a href="${link}">Reimposta la password</a> (valido 1 ora).</p>
+        <p>Se non sei stato tu, ignora questa email.</p>`;
+      const inviata = await inviaEmailSistema(
+        parsed.data.email,
+        "Reset della password — Inbox AI",
+        html
+      );
+      if (!inviata) console.log(`[Reset] link (SMTP non configurato): ${link}`);
+    }
+  }
+  res.json({ messaggio: "Se l'email esiste, riceverai le istruzioni." });
+}
+
+const resetSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8, "La password deve avere almeno 8 caratteri."),
+});
+
+export async function resetPassword(req: Request, res: Response) {
+  const parsed = resetSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ messaggio: "Dati non validi.", errori: parsed.error.flatten().fieldErrors });
+  }
+  const ok = await auth.resetPassword(parsed.data.token, parsed.data.password);
+  if (!ok) {
+    return res.status(400).json({ messaggio: "Token non valido o scaduto." });
+  }
+  res.json({ aggiornata: true });
 }
 
 export async function logout(req: Request, res: Response) {

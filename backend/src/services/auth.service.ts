@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { User, UserDoc } from "../models/User.js";
 
@@ -36,6 +37,12 @@ interface UtenteInterno extends Omit<UtenteDTO, "impostazioni"> {
   impostazioni?: Impostazioni;
   passwordHash?: string;
   googleId?: string;
+  resetTokenHash?: string;
+  resetTokenExp?: Date;
+}
+
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 const dbAttivo = () => mongoose.connection.readyState === 1;
@@ -116,6 +123,85 @@ export async function aggiornaImpostazioni(
   if (!mongoose.isValidObjectId(id)) return null;
   const doc = await User.findByIdAndUpdate(id, { impostazioni }, { new: true });
   return doc ? pubblico(fromDoc(doc)) : null;
+}
+
+/** Cambia la password verificando quella attuale. */
+export async function cambiaPassword(
+  id: string,
+  attuale: string,
+  nuova: string
+): Promise<boolean> {
+  let u: UtenteInterno | null;
+  if (!dbAttivo()) {
+    u = demo.find((x) => x.id === id) ?? null;
+  } else {
+    const doc = mongoose.isValidObjectId(id) ? await User.findById(id) : null;
+    u = doc ? fromDoc(doc) : null;
+  }
+  if (!u?.passwordHash) return false;
+  if (!(await bcrypt.compare(attuale, u.passwordHash))) return false;
+
+  const hash = await bcrypt.hash(nuova, 12);
+  if (!dbAttivo()) {
+    u.passwordHash = hash;
+    return true;
+  }
+  await User.findByIdAndUpdate(id, { passwordHash: hash });
+  return true;
+}
+
+/** Crea un token di reset (valido 1h) per l'email; ritorna il token in chiaro. */
+export async function creaTokenReset(email: string): Promise<string | null> {
+  const u = await trovaPerEmail(email);
+  if (!u) return null;
+  const token = crypto.randomBytes(32).toString("hex");
+  const resetTokenHash = hashToken(token);
+  const resetTokenExp = new Date(Date.now() + 60 * 60 * 1000);
+  if (!dbAttivo()) {
+    const du = demo.find((x) => x.id === u.id);
+    if (du) {
+      du.resetTokenHash = resetTokenHash;
+      du.resetTokenExp = resetTokenExp;
+    }
+  } else {
+    await User.findByIdAndUpdate(u.id, { resetTokenHash, resetTokenExp });
+  }
+  return token;
+}
+
+/** Reimposta la password a partire da un token valido. */
+export async function resetPassword(
+  token: string,
+  nuova: string
+): Promise<boolean> {
+  const hash = hashToken(token);
+  const passwordHash = await bcrypt.hash(nuova, 12);
+  if (!dbAttivo()) {
+    const u = demo.find(
+      (x) =>
+        x.resetTokenHash === hash &&
+        x.resetTokenExp &&
+        x.resetTokenExp.getTime() > Date.now()
+    );
+    if (!u) return false;
+    u.passwordHash = passwordHash;
+    u.resetTokenHash = undefined;
+    u.resetTokenExp = undefined;
+    return true;
+  }
+  const doc = await User.findOne({
+    resetTokenHash: hash,
+    resetTokenExp: { $gt: new Date() },
+  });
+  if (!doc) return false;
+  await User.updateOne(
+    { _id: doc._id },
+    {
+      $set: { passwordHash },
+      $unset: { resetTokenHash: "", resetTokenExp: "" },
+    }
+  );
+  return true;
 }
 
 export async function registra(

@@ -36,6 +36,9 @@ const Cestino = lazy(() =>
   import("@/pages/Cestino").then((m) => ({ default: m.Cestino }))
 );
 const Login = lazy(() => import("@/pages/Login").then((m) => ({ default: m.Login })));
+const ResetPassword = lazy(() =>
+  import("@/pages/ResetPassword").then((m) => ({ default: m.ResetPassword }))
+);
 const NotFound = lazy(() =>
   import("@/pages/NotFound").then((m) => ({ default: m.NotFound }))
 );
@@ -61,6 +64,7 @@ export default function App() {
         </Route>
 
         <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Applicazione autenticata */}
         <Route element={<RequireAuth />}>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar } from "@/components/Avatar";
 import { ConnettiGmail } from "@/components/gmail/ConnettiGmail";
+import { CambiaPassword } from "@/components/CambiaPassword";
 import {
   useMe,
   useAggiornaAvatar,
@@ -84,6 +85,16 @@ export function Impostazioni() {
                 Clicca sulla foto per cambiarla (JPG o PNG).
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sicurezza</CardTitle>
+            <CardDescription>Cambia la password del tuo account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CambiaPassword />
           </CardContent>
         </Card>
 
