@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EditableText } from "@/components/EditableText";
+import { GeneraOffertaAI } from "@/components/offerte/GeneraOffertaAI";
 import { toast } from "@/components/ui/toast";
 import { formatEuro, formatData } from "@/lib/utils";
 import {
@@ -30,6 +31,7 @@ export function Offerte() {
   const elimina = useEliminaOfferta();
 
   const [form, setForm] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [cliente, setCliente] = useState("");
   const [importo, setImporto] = useState("");
 
@@ -54,11 +56,18 @@ export function Offerte() {
         title="Offerte"
         description="Generazione automatica, modifica e versioning dei documenti"
         action={
-          <Button onClick={() => setForm((v) => !v)}>
-            <Plus className="size-4" /> Nuova offerta
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setAiOpen(true)}>
+              <Sparkles className="size-4" /> Genera con AI
+            </Button>
+            <Button onClick={() => setForm((v) => !v)}>
+              <Plus className="size-4" /> Nuova offerta
+            </Button>
+          </div>
         }
       />
+
+      {aiOpen && <GeneraOffertaAI onClose={() => setAiOpen(false)} />}
 
       {form && (
         <Card className="mb-4">
