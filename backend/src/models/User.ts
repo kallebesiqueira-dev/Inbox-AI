@@ -14,6 +14,8 @@ const userSchema = new Schema(
     googleId: { type: String },
     // Foto profilo come data URL (immagine ridimensionata lato client).
     avatar: { type: String },
+    // Impostazioni dell'organizzazione (nome/email azienda + automazioni email).
+    impostazioni: { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );

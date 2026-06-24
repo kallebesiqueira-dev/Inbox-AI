@@ -105,6 +105,31 @@ const avatarSchema = z.object({
     .max(500_000, "Immagine troppo grande."),
 });
 
+const impostazioniSchema = z.object({
+  nomeAzienda: z.string().trim().max(200).default(""),
+  emailAzienda: z.string().trim().max(200).default(""),
+  automazioni: z.object({
+    lettura: z.boolean(),
+    analisi: z.boolean(),
+    classificazione: z.boolean(),
+    elaborazione: z.boolean(),
+  }),
+});
+
+export async function aggiornaImpostazioni(req: Request, res: Response) {
+  const parsed = impostazioniSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ messaggio: "Dati non validi.", errori: parsed.error.flatten().fieldErrors });
+  }
+  const utente = req.userId
+    ? await auth.aggiornaImpostazioni(req.userId, parsed.data)
+    : null;
+  if (!utente) return res.status(401).json({ messaggio: "Non autenticato." });
+  res.json(utente);
+}
+
 export async function aggiornaAvatar(req: Request, res: Response) {
   const parsed = avatarSchema.safeParse(req.body);
   if (!parsed.success) {

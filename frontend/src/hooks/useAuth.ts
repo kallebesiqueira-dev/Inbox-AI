@@ -1,11 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError, setCsrfToken } from "@/lib/api";
 
+export interface Impostazioni {
+  nomeAzienda: string;
+  emailAzienda: string;
+  automazioni: {
+    lettura: boolean;
+    analisi: boolean;
+    classificazione: boolean;
+    elaborazione: boolean;
+  };
+}
+
 export interface Utente {
   id: string;
   email: string;
   nome: string;
   avatar?: string;
+  impostazioni: Impostazioni;
 }
 
 /** Risposta di autenticazione: utente + token CSRF da usare negli header. */
@@ -89,6 +101,21 @@ export function useAggiornaAvatar() {
       apiFetch<Utente>("/auth/avatar", {
         method: "PATCH",
         body: JSON.stringify({ avatar }),
+      }),
+    onSuccess: (utente) =>
+      qc.setQueryData(ME_KEY, (prev: SessioneUtente | null) =>
+        prev ? { ...prev, ...utente } : prev
+      ),
+  });
+}
+
+export function useAggiornaImpostazioni() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (impostazioni: Impostazioni) =>
+      apiFetch<Utente>("/auth/impostazioni", {
+        method: "PATCH",
+        body: JSON.stringify(impostazioni),
       }),
     onSuccess: (utente) =>
       qc.setQueryData(ME_KEY, (prev: SessioneUtente | null) =>

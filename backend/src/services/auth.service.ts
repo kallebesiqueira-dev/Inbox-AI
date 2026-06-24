@@ -2,14 +2,38 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { User, UserDoc } from "../models/User.js";
 
+export interface Impostazioni {
+  nomeAzienda: string;
+  emailAzienda: string;
+  automazioni: {
+    lettura: boolean;
+    analisi: boolean;
+    classificazione: boolean;
+    elaborazione: boolean;
+  };
+}
+
+export const IMPOSTAZIONI_DEFAULT: Impostazioni = {
+  nomeAzienda: "",
+  emailAzienda: "",
+  automazioni: {
+    lettura: true,
+    analisi: true,
+    classificazione: true,
+    elaborazione: true,
+  },
+};
+
 export interface UtenteDTO {
   id: string;
   email: string;
   nome: string;
   avatar?: string;
+  impostazioni: Impostazioni;
 }
 
-interface UtenteInterno extends UtenteDTO {
+interface UtenteInterno extends Omit<UtenteDTO, "impostazioni"> {
+  impostazioni?: Impostazioni;
   passwordHash?: string;
   googleId?: string;
 }
@@ -24,7 +48,13 @@ const demo: UtenteInterno[] = [];
 const HASH_FITTIZIO = bcrypt.hashSync("inbox-ai-timing-guard", 12);
 
 function pubblico(u: UtenteInterno): UtenteDTO {
-  return { id: u.id, email: u.email, nome: u.nome, avatar: u.avatar };
+  return {
+    id: u.id,
+    email: u.email,
+    nome: u.nome,
+    avatar: u.avatar,
+    impostazioni: u.impostazioni ?? IMPOSTAZIONI_DEFAULT,
+  };
 }
 
 function fromDoc(d: UserDoc): UtenteInterno {
@@ -33,6 +63,7 @@ function fromDoc(d: UserDoc): UtenteInterno {
     email: d.email,
     nome: d.nome,
     avatar: d.avatar ?? undefined,
+    impostazioni: (d.impostazioni as Impostazioni) ?? IMPOSTAZIONI_DEFAULT,
     passwordHash: d.passwordHash ?? undefined,
     googleId: d.googleId ?? undefined,
   };
@@ -68,6 +99,22 @@ export async function aggiornaAvatar(
   }
   if (!mongoose.isValidObjectId(id)) return null;
   const doc = await User.findByIdAndUpdate(id, { avatar }, { new: true });
+  return doc ? pubblico(fromDoc(doc)) : null;
+}
+
+/** Aggiorna le impostazioni dell'organizzazione dell'utente. */
+export async function aggiornaImpostazioni(
+  id: string,
+  impostazioni: Impostazioni
+): Promise<UtenteDTO | null> {
+  if (!dbAttivo()) {
+    const u = demo.find((x) => x.id === id);
+    if (!u) return null;
+    u.impostazioni = impostazioni;
+    return pubblico(u);
+  }
+  if (!mongoose.isValidObjectId(id)) return null;
+  const doc = await User.findByIdAndUpdate(id, { impostazioni }, { new: true });
   return doc ? pubblico(fromDoc(doc)) : null;
 }
 
