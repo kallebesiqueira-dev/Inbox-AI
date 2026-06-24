@@ -25,11 +25,11 @@ function generaNumero(): string {
   return `${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
 }
 
-const seed: OffertaDTO[] = [
-  { id: "demo-1", numero: "2025-086", cliente: "Rossi S.p.A.", importo: 12400, stato: "Bozza", data: "2026-06-18T00:00:00.000Z" },
-  { id: "demo-2", numero: "2025-085", cliente: "Bianchi SRL", importo: 8750, stato: "In revisione", data: "2026-06-15T00:00:00.000Z" },
-  { id: "demo-3", numero: "2025-084", cliente: "Verdi & Co", importo: 21300, stato: "Approvata", data: "2026-06-12T00:00:00.000Z" },
-  { id: "demo-4", numero: "2025-083", cliente: "Studio Ferrari", importo: 5600, stato: "Inviata", data: "2026-06-10T00:00:00.000Z" },
+const semi: OffertaInput[] = [
+  { numero: "2025-086", cliente: "Rossi S.p.A.", importo: 12400, stato: "Bozza" },
+  { numero: "2025-085", cliente: "Bianchi SRL", importo: 8750, stato: "In revisione" },
+  { numero: "2025-084", cliente: "Verdi & Co", importo: 21300, stato: "Approvata" },
+  { numero: "2025-083", cliente: "Studio Ferrari", importo: 5600, stato: "Inviata" },
 ];
 
 export const offerteCrud = creaCrud<OffertaInput, OffertaDTO>({
@@ -42,7 +42,7 @@ export const offerteCrud = creaCrud<OffertaInput, OffertaDTO>({
     stato: d.stato as Stato,
     data: (d.data ?? new Date()).toISOString(),
   }),
-  seed,
+  semi,
   demo: (input, id) => ({
     id,
     numero: input.numero ?? generaNumero(),

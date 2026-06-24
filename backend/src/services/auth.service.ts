@@ -155,16 +155,16 @@ export async function daGoogle(
   googleId: string,
   email: string,
   nome: string
-): Promise<UtenteDTO> {
+): Promise<{ utente: UtenteDTO; nuovo: boolean }> {
   const esistente = await trovaPerEmail(email);
-  if (esistente) return pubblico(esistente);
+  if (esistente) return { utente: pubblico(esistente), nuovo: false };
 
   const e = email.toLowerCase().trim();
   if (!dbAttivo()) {
     const u: UtenteInterno = { id: `demo-${Date.now()}`, email: e, nome, googleId };
     demo.push(u);
-    return pubblico(u);
+    return { utente: pubblico(u), nuovo: true };
   }
   const doc = await User.create({ email: e, nome, googleId });
-  return pubblico(fromDoc(doc));
+  return { utente: pubblico(fromDoc(doc)), nuovo: true };
 }

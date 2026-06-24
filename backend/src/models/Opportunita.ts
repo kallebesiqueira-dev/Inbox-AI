@@ -10,6 +10,8 @@ export const FASI_CRM = [
 
 const opportunitaSchema = new Schema(
   {
+    // Proprietario della risorsa (isolamento multi-utente).
+    userId: { type: String, index: true },
     cliente: { type: String, required: true, trim: true },
     valore: { type: Number, required: true, min: 0 },
     fase: { type: String, enum: FASI_CRM, default: "Nuovo" },

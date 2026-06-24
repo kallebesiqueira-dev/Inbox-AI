@@ -16,6 +16,8 @@ export const FASI_APPROVAZIONE = [
 
 const approvazioneSchema = new Schema(
   {
+    // Proprietario della risorsa (isolamento multi-utente).
+    userId: { type: String, index: true },
     tipo: { type: String, enum: TIPI_APPROVAZIONE, required: true },
     oggetto: { type: String, required: true, trim: true },
     fase: { type: String, enum: FASI_APPROVAZIONE, default: "Revisione" },

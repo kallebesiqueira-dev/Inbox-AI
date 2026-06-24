@@ -19,14 +19,14 @@ export interface OpportunitaDTO {
   avatar?: string;
 }
 
-const seed: OpportunitaDTO[] = [
-  { id: "demo-1", cliente: "Gialli SRL", valore: 9000, fase: "Nuovo" },
-  { id: "demo-2", cliente: "Marini SpA", valore: 15000, fase: "Nuovo" },
-  { id: "demo-3", cliente: "Rossi S.p.A.", valore: 12400, fase: "In Analisi" },
-  { id: "demo-4", cliente: "Studio Ferrari", valore: 5600, fase: "Offerta Inviata" },
-  { id: "demo-5", cliente: "Conti & Figli", valore: 18200, fase: "Offerta Inviata" },
-  { id: "demo-6", cliente: "Verdi & Co", valore: 21300, fase: "Negoziazione" },
-  { id: "demo-7", cliente: "Bianchi SRL", valore: 8750, fase: "Chiuso" },
+const semi: OpportunitaInput[] = [
+  { cliente: "Gialli SRL", valore: 9000, fase: "Nuovo" },
+  { cliente: "Marini SpA", valore: 15000, fase: "Nuovo" },
+  { cliente: "Rossi S.p.A.", valore: 12400, fase: "In Analisi" },
+  { cliente: "Studio Ferrari", valore: 5600, fase: "Offerta Inviata" },
+  { cliente: "Conti & Figli", valore: 18200, fase: "Offerta Inviata" },
+  { cliente: "Verdi & Co", valore: 21300, fase: "Negoziazione" },
+  { cliente: "Bianchi SRL", valore: 8750, fase: "Chiuso" },
 ];
 
 export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
@@ -38,7 +38,7 @@ export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
     fase: d.fase as FaseCrm,
     avatar: (d.avatar as string | undefined) ?? undefined,
   }),
-  seed,
+  semi,
   demo: (input, id) => ({
     id,
     cliente: input.cliente,

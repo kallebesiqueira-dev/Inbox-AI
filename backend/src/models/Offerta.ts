@@ -9,6 +9,8 @@ export const STATI_OFFERTA = [
 
 const offertaSchema = new Schema(
   {
+    // Proprietario della risorsa (isolamento multi-utente).
+    userId: { type: String, index: true },
     numero: {
       type: String,
       required: true,
