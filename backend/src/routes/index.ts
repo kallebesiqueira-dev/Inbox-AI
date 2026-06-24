@@ -1,13 +1,19 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import { isProd } from "../config/env.js";
-import { analizzaEmail, generaOfferta, chat } from "../controllers/ai.controller.js";
+import {
+  analizzaEmail,
+  generaOfferta,
+  chat,
+  generaRisposta,
+} from "../controllers/ai.controller.js";
 import { kpi } from "../controllers/dashboard.controller.js";
 import { elenca as elencaInbox } from "../controllers/inbox.controller.js";
 import {
   connetti as connettiGmail,
   stato as statoGmail,
   disconnetti as disconnettiGmail,
+  invia as inviaGmail,
 } from "../controllers/gmail.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
 import { aiLimiter } from "../middleware/rateLimit.js";
@@ -44,10 +50,12 @@ router.get("/inbox", requireAuth, elencaInbox);
 router.get("/gmail/stato", requireAuth, statoGmail);
 router.post("/gmail/connetti", requireAuth, csrfProtection, connettiGmail);
 router.post("/gmail/disconnetti", requireAuth, csrfProtection, disconnettiGmail);
+router.post("/gmail/invia", requireAuth, csrfProtection, aiLimiter, inviaGmail);
 
 // Funzionalità AI (protette + rate limit)
 router.post("/ai/analizza-email", requireAuth, csrfProtection, aiLimiter, analizzaEmail);
 router.post("/ai/genera-offerta", requireAuth, csrfProtection, aiLimiter, generaOfferta);
+router.post("/ai/genera-risposta", requireAuth, csrfProtection, aiLimiter, generaRisposta);
 router.post("/ai/chat", requireAuth, csrfProtection, aiLimiter, chat);
 
 // KPI, serie mensile e attività della dashboard (protetti)

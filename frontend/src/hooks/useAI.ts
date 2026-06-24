@@ -25,6 +25,17 @@ export function useAnalizzaEmail() {
   });
 }
 
+/** Genera una bozza di risposta a un'email tramite il provider AI. */
+export function useGeneraRisposta() {
+  return useMutation({
+    mutationFn: (input: { mittente: string; oggetto: string; corpo: string }) =>
+      apiFetch<{ bozza: string }>("/ai/genera-risposta", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+  });
+}
+
 /** Genera una bozza di offerta tramite il provider AI. */
 export function useGeneraOfferta() {
   return useMutation({

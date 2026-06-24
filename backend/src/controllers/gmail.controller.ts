@@ -33,3 +33,33 @@ export async function disconnetti(req: Request, res: Response) {
   if (req.userId) await gmail.disconnetti(req.userId);
   res.status(204).end();
 }
+
+const inviaSchema = z.object({
+  to: z.string().email("Destinatario non valido."),
+  oggetto: z.string().trim().min(1).max(300),
+  corpo: z.string().trim().min(1).max(20_000),
+  threadId: z.string().optional(),
+});
+
+export async function invia(req: Request, res: Response) {
+  const parsed = inviaSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ messaggio: "Dati non validi.", errori: parsed.error.flatten().fieldErrors });
+  }
+  try {
+    const ok = req.userId
+      ? await gmail.inviaEmail(req.userId, parsed.data)
+      : false;
+    if (!ok) {
+      return res.status(400).json({
+        messaggio: "Invio non riuscito. Verifica di aver collegato Gmail con il permesso di invio.",
+      });
+    }
+    res.json({ inviata: true });
+  } catch (err) {
+    console.error("[Gmail] invio fallito:", err);
+    res.status(502).json({ messaggio: "Errore durante l'invio dell'email." });
+  }
+}

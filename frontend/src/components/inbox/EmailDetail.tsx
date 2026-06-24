@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { X, Sparkles, FileText, Users, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  X,
+  Sparkles,
+  FileText,
+  Users,
+  Loader2,
+  CheckCircle2,
+  Reply,
+  Send,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
@@ -7,8 +16,10 @@ import { formatEuro } from "@/lib/utils";
 import {
   useAnalizzaEmail,
   useGeneraOfferta,
+  useGeneraRisposta,
   type OffertaGenerata,
 } from "@/hooks/useAI";
+import { useInviaEmail } from "@/hooks/useGmail";
 import { useCreaOfferta } from "@/hooks/useOfferte";
 import { useCreaOpportunita } from "@/hooks/useOpportunita";
 import type { EmailInbox } from "@/hooks/useInbox";
@@ -28,10 +39,14 @@ export function EmailDetail({
 }) {
   const analizza = useAnalizzaEmail();
   const genera = useGeneraOfferta();
+  const generaRisposta = useGeneraRisposta();
+  const inviaEmail = useInviaEmail();
   const creaOfferta = useCreaOfferta();
   const creaOpportunita = useCreaOpportunita();
   const [offerta, setOfferta] = useState<OffertaGenerata | null>(null);
   const [oppCreata, setOppCreata] = useState(false);
+  const [rispondi, setRispondi] = useState(false);
+  const [bozza, setBozza] = useState("");
 
   const analisi = analizza.data;
   const totale = offerta?.voci.reduce((s, v) => s + v.importo, 0) ?? 0;
@@ -72,6 +87,28 @@ export function EmailDetail({
           toast(`Opportunità creata nel CRM per ${email.mittente}.`);
           setOppCreata(true);
         },
+      }
+    );
+  }
+
+  function onGeneraRisposta() {
+    generaRisposta.mutate(
+      { mittente: email.mittente, oggetto: email.oggetto, corpo: email.corpo },
+      { onSuccess: (r) => setBozza(r.bozza) }
+    );
+  }
+
+  function onInvia() {
+    if (!email.mittenteEmail || !bozza.trim()) return;
+    inviaEmail.mutate(
+      { to: email.mittenteEmail, oggetto: `Re: ${email.oggetto}`, corpo: bozza.trim() },
+      {
+        onSuccess: () => {
+          toast("Risposta inviata.");
+          onClose();
+        },
+        onError: (e) =>
+          toast(e instanceof Error ? e.message : "Invio non riuscito.", "errore"),
       }
     );
   }
@@ -187,10 +224,63 @@ export function EmailDetail({
               </Button>
             </div>
           )}
+
+          {/* Risposta */}
+          {rispondi && (
+            <div className="rounded-xl border border-border p-4">
+              <p className="mb-2 text-sm text-muted-foreground">
+                A: {email.mittenteEmail || "indirizzo non disponibile"}
+              </p>
+              <textarea
+                value={bozza}
+                onChange={(e) => setBozza(e.target.value)}
+                rows={6}
+                placeholder="Scrivi la tua risposta o generala con l'AI…"
+                className="w-full resize-none rounded-md border border-input bg-card px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="mt-2 flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={onGeneraRisposta}
+                  disabled={generaRisposta.isPending}
+                >
+                  {generaRisposta.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-4" />
+                  )}
+                  Genera bozza con AI
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onInvia}
+                  disabled={
+                    !bozza.trim() || !email.mittenteEmail || inviaEmail.isPending
+                  }
+                >
+                  {inviaEmail.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  Invia
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Azioni */}
         <div className="flex flex-wrap gap-2 border-t border-border p-4">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => setRispondi((v) => !v)}
+          >
+            <Reply className="size-4" />
+            {rispondi ? "Annulla" : "Rispondi"}
+          </Button>
           {!offerta && (
             <Button
               variant="secondary"

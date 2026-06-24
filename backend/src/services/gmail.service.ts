@@ -13,6 +13,7 @@ const GMAIL = "https://gmail.googleapis.com/gmail/v1/users/me";
 export interface EmailGmail {
   id: string;
   mittente: string;
+  mittenteEmail: string;
   oggetto: string;
   categoria: CategoriaEmail;
   priorita: "Alta" | "Media" | "Bassa";
@@ -145,6 +146,7 @@ async function leggiSingola(
     return {
       id,
       mittente: pulisciMittente(h("from")),
+      mittenteEmail: estraiEmail(h("from")),
       oggetto: h("subject") || "(senza oggetto)",
       categoria: "Altro",
       priorita: "Media",
@@ -200,6 +202,62 @@ function pulisciMittente(from: string): string {
   if (conNome) return conNome[1].trim();
   const soloEmail = from.match(/<?([^<>\s]+@[^<>\s]+)>?/);
   return soloEmail ? soloEmail[1] : from || "Sconosciuto";
+}
+
+function estraiEmail(from: string): string {
+  const m = from.match(/<([^<>\s]+@[^<>\s]+)>/) || from.match(/([^<>\s]+@[^<>\s]+)/);
+  return m ? m[1] : "";
+}
+
+/** Invia (o risponde a) un'email tramite la casella Gmail collegata. */
+export async function inviaEmail(
+  userId: string,
+  opts: { to: string; oggetto: string; corpo: string; threadId?: string }
+): Promise<boolean> {
+  if (!dbAttivo() || !mongoose.isValidObjectId(userId)) return false;
+  const doc = await User.findById(userId);
+  const blob = doc?.gmailToken as string | undefined;
+  if (!blob) return false;
+  const refresh = decifra(blob);
+  if (!refresh) return false;
+
+  const oauth = client();
+  oauth.setCredentials({ refresh_token: refresh });
+  const { token } = await oauth.getAccessToken();
+  if (!token) return false;
+
+  const raw = costruisciMessaggio((doc?.gmailEmail as string) ?? "me", opts);
+  const corpoReq: Record<string, string> = { raw };
+  if (opts.threadId) corpoReq.threadId = opts.threadId;
+
+  const r = await fetch(`${GMAIL}/messages/send`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify(corpoReq),
+  });
+  return r.ok;
+}
+
+function costruisciMessaggio(
+  from: string,
+  { to, oggetto, corpo }: { to: string; oggetto: string; corpo: string }
+): string {
+  // Oggetto codificato RFC 2047 per supportare accenti/UTF-8 negli header.
+  const oggettoEnc = `=?UTF-8?B?${Buffer.from(oggetto, "utf8").toString("base64")}?=`;
+  const messaggio = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${oggettoEnc}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=UTF-8",
+    "",
+    corpo,
+  ].join("\r\n");
+  return Buffer.from(messaggio, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 function tempoRelativo(data: string): string {

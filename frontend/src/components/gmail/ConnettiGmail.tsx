@@ -9,7 +9,8 @@ import {
 } from "@/hooks/useGmail";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-const SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
+const SCOPE =
+  "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send";
 
 /** Pulsante per collegare/scollegare la casella Gmail dell'utente. */
 export function ConnettiGmail({ compatto }: { compatto?: boolean }) {

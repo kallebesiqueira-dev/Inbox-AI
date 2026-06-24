@@ -29,6 +29,21 @@ export function useConnettiGmail() {
   });
 }
 
+export function useInviaEmail() {
+  return useMutation({
+    mutationFn: (input: {
+      to: string;
+      oggetto: string;
+      corpo: string;
+      threadId?: string;
+    }) =>
+      apiFetch<{ inviata: boolean }>("/gmail/invia", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+  });
+}
+
 export function useDisconnettiGmail() {
   const qc = useQueryClient();
   return useMutation({

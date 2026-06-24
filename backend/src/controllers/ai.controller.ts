@@ -53,6 +53,43 @@ export async function generaOfferta(req: Request, res: Response) {
   res.json(offerta);
 }
 
+const rispostaSchema = z.object({
+  mittente: z.string().trim().max(320),
+  oggetto: z.string().trim().max(300),
+  corpo: z.string().max(10_000),
+});
+
+export async function generaRisposta(req: Request, res: Response) {
+  const parsed = rispostaSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      messaggio: "Dati non validi.",
+      errori: parsed.error.flatten().fieldErrors,
+    });
+  }
+  const { mittente, oggetto, corpo } = parsed.data;
+  const prompt = [
+    "Scrivi una risposta professionale e cortese in italiano alla seguente email.",
+    "Rispondi SOLO con il testo della risposta, senza riga dell'oggetto.",
+    "",
+    `Da: ${mittente}`,
+    `Oggetto: ${oggetto}`,
+    "Messaggio:",
+    corpo,
+  ].join("\n");
+
+  try {
+    let bozza = "";
+    for await (const chunk of ai.chat([{ ruolo: "utente", contenuto: prompt }])) {
+      bozza += chunk;
+    }
+    res.json({ bozza: bozza.trim() });
+  } catch (err) {
+    console.error("[AI] generazione risposta fallita:", err);
+    res.status(502).json({ messaggio: "Impossibile generare la risposta." });
+  }
+}
+
 export async function chat(req: Request, res: Response) {
   const parsed = chatSchema.safeParse(req.body);
   if (!parsed.success) {

@@ -11,6 +11,7 @@ export type CategoriaEmail =
 export interface EmailInbox {
   id: string;
   mittente: string;
+  mittenteEmail?: string;
   oggetto: string;
   categoria: CategoriaEmail;
   priorita: "Alta" | "Media" | "Bassa";
