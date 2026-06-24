@@ -45,49 +45,19 @@ Oltre all'area di lavoro autenticata è presente un **sito pubblico** di present
 (landing, funzionalità e **documentazione con tutorial**). Dentro l'app, una **ricerca
 rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'uso quotidiano.
 
-## Anteprima
+## Demo
 
-### Sito pubblico — presentazione del servizio
-![Landing](docs/screenshots/landing.png)
+![Inbox AI in azione](docs/walkthrough.gif)
 
-### Funzionalità — i moduli in dettaglio
-![Funzionalità](docs/screenshots/funzionalita.png)
-
-### Documentazione — tutorial e spiegazioni
-![Documentazione](docs/screenshots/documentazione.png)
-
-### Assistente AI — widget di chat flottante in streaming
-![Assistente](docs/screenshots/assistente.png)
-
-### Dashboard — panoramica operativa in tempo reale
-![Dashboard](docs/screenshots/dashboard.png)
-
-### Ricerca rapida — command palette (Ctrl/⌘ K)
-![Ricerca](docs/screenshots/ricerca.png)
-
-### Inbox — email analizzate e classificate automaticamente
-![Inbox](docs/screenshots/inbox.png)
+> Dalla landing alla **generazione di un'offerta con l'AI**, all'**assistente in
+> streaming**, al **CRM** e alla **ricerca rapida** (⌘K).
 
 ### Automazione AI — analizza l'email, genera l'offerta, crea l'opportunità
+
+Apri un'email reale (Gmail) e lascia che l'AI la classifichi, generi un'offerta o
+crei un'opportunità nel CRM.
+
 ![Automazione AI](docs/screenshots/inbox-ai.png)
-
-### Offerte — generazione, modifica e versioning dei documenti
-![Offerte](docs/screenshots/offerte.png)
-
-### CRM — pipeline commerciale e gestione delle opportunità
-![CRM](docs/screenshots/crm.png)
-
-### Approvazioni — workflow con supervisione umana
-![Approvazioni](docs/screenshots/approvazioni.png)
-
-### Cestino — elementi eliminati, ripristinabili
-![Cestino](docs/screenshots/cestino.png)
-
-### Impostazioni — profilo (foto), organizzazione e automazioni
-![Impostazioni](docs/screenshots/impostazioni.png)
-
-### Accesso
-![Login](docs/screenshots/login.png)
 
 ## Moduli
 
