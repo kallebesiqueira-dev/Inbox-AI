@@ -3,6 +3,8 @@ import { OAuth2Client } from "google-auth-library";
 import { env } from "../config/env.js";
 import { User } from "../models/User.js";
 import { cifra, decifra } from "../utils/crypto.js";
+import { ai } from "./ai/index.js";
+import type { CategoriaEmail } from "./ai/providers/AIProvider.js";
 
 const dbAttivo = () => mongoose.connection.readyState === 1;
 
@@ -12,10 +14,35 @@ export interface EmailGmail {
   id: string;
   mittente: string;
   oggetto: string;
-  categoria: "Altro";
-  priorita: "Media";
+  categoria: CategoriaEmail;
+  priorita: "Alta" | "Media" | "Bassa";
   tempo: string;
   corpo: string;
+}
+
+// Cache della classificazione AI per messaggio (evita di rianalizzare a ogni
+// caricamento). Per-processo: su Render free (istanza singola) è sufficiente.
+const cacheClassificazione = new Map<
+  string,
+  { categoria: CategoriaEmail; priorita: "Alta" | "Media" | "Bassa" }
+>();
+
+/** Classifica un'email con l'AI (categoria + priorità), con cache per messaggio. */
+async function classifica(email: EmailGmail): Promise<EmailGmail> {
+  const cached = cacheClassificazione.get(email.id);
+  if (cached) return { ...email, ...cached };
+  try {
+    const a = await ai.analizzaEmail({
+      mittente: email.mittente,
+      oggetto: email.oggetto,
+      corpo: email.corpo,
+    });
+    const c = { categoria: a.categoria, priorita: a.priorita };
+    cacheClassificazione.set(email.id, c);
+    return { ...email, ...c };
+  } catch {
+    return email;
+  }
 }
 
 /** La connessione Gmail richiede le credenziali OAuth e un database. */
@@ -98,7 +125,9 @@ export async function leggiEmail(userId: string): Promise<EmailGmail[] | null> {
   const ids = (lista.messages ?? []).map((m) => m.id);
 
   const email = await Promise.all(ids.map((id) => leggiSingola(token, id)));
-  return email.filter((e): e is EmailGmail => e !== null);
+  const valide = email.filter((e): e is EmailGmail => e !== null);
+  // Classificazione automatica con l'AI (categoria + priorità), in parallelo.
+  return Promise.all(valide.map(classifica));
 }
 
 async function leggiSingola(
