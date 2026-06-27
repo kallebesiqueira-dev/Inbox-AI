@@ -21,5 +21,7 @@ export function useDashboard() {
   return useQuery({
     queryKey: ["dashboard", "kpi"],
     queryFn: () => apiFetch<DashboardData>("/dashboard/kpi"),
+    // Evita di rifare la richiesta a ogni ritorno sulla dashboard.
+    staleTime: 60_000,
   });
 }

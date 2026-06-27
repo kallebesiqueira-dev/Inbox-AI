@@ -39,7 +39,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   const { data } = useQuery({
     queryKey: ["notifiche"],
     queryFn: () => apiFetch<Notifica[]>("/notifiche"),
-    refetchInterval: 60_000,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
   });
   const notifiche = useMemo(() => data ?? [], [data]);
   // Stato "letta" gestito lato client per sessione.

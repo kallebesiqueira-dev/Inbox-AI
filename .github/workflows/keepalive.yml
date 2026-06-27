@@ -1,0 +1,15 @@
+name: Keep-alive
+
+# Mantiene "sveglio" il backend su Render free (che va in sleep dopo ~15 min di
+# inattività) pingando l'health check ogni ~10 minuti. Evita i cold start lenti.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health
+        run: curl -fsS -m 60 https://inbox-ai-mwca.onrender.com/api/health || true

@@ -23,5 +23,7 @@ export function useInbox() {
   return useQuery({
     queryKey: ["inbox"],
     queryFn: () => apiFetch<EmailInbox[]>("/inbox"),
+    // L'analisi AI delle email è costosa: niente refetch a ogni navigazione.
+    staleTime: 120_000,
   });
 }

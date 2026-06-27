@@ -11,6 +11,7 @@ export function useStatoGmail() {
   return useQuery({
     queryKey: ["gmail", "stato"],
     queryFn: () => apiFetch<StatoGmail>("/gmail/stato"),
+    staleTime: 5 * 60_000,
   });
 }
 
