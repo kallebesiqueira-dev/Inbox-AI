@@ -57,19 +57,19 @@ function Contenuto({ data }: { data: DashboardData }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {META.map(({ chiave, label, icon: Icon }) => {
           const m = data.metriche[chiave];
           return (
             <Card key={chiave}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary sm:size-10">
                     <Icon className="size-5" />
                   </div>
                   <Badge variant="success">+{m.delta}%</Badge>
                 </div>
-                <p className="mt-4 text-3xl font-semibold tracking-tight">
+                <p className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
                   {formato(chiave, m.valore)}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">{label}</p>

@@ -59,7 +59,7 @@ export function Offerte() {
         title="Offerte"
         description="Generazione automatica, modifica e versioning dei documenti"
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setAiOpen(true)}>
               <Sparkles className="size-4" /> Genera con AI
             </Button>

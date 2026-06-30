@@ -4,7 +4,7 @@ name: Keep-alive
 # inattività) pingando l'health check ogni ~10 minuti. Evita i cold start lenti.
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
