@@ -46,13 +46,18 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   // Stato "letta" gestito lato client per sessione.
   const [lette, setLette] = useState<Set<string>>(new Set());
 
-  const value: CtxValue = {
-    notifiche,
-    nonLette: notifiche.filter((n) => !lette.has(n.id)).length,
-    letta: (id) => lette.has(id),
-    segnaTutteLette: () => setLette(new Set(notifiche.map((n) => n.id))),
-    segnaLetta: (id) => setLette((prev) => new Set(prev).add(id)),
-  };
+  // Memoizzato: il provider avvolge l'intera app, un value nuovo a ogni render
+  // farebbe ri-renderizzare tutti i consumer inutilmente.
+  const value: CtxValue = useMemo(
+    () => ({
+      notifiche,
+      nonLette: notifiche.filter((n) => !lette.has(n.id)).length,
+      letta: (id) => lette.has(id),
+      segnaTutteLette: () => setLette(new Set(notifiche.map((n) => n.id))),
+      segnaLetta: (id) => setLette((prev) => new Set(prev).add(id)),
+    }),
+    [notifiche, lette]
+  );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -86,6 +91,7 @@ export function NotificationsBell() {
         variant="ghost"
         size="icon"
         aria-label="Notifiche"
+        aria-expanded={aperto}
         onClick={() => setAperto((a) => !a)}
       >
         <Bell className="size-4" />

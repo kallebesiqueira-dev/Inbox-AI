@@ -22,6 +22,7 @@ import {
 import { useInviaEmail } from "@/hooks/useGmail";
 import { useCreaOfferta } from "@/hooks/useOfferte";
 import { useCreaOpportunita } from "@/hooks/useOpportunita";
+import { useModale } from "@/hooks/useModale";
 import type { EmailInbox } from "@/hooks/useInbox";
 
 const prioritaColore: Record<string, string> = {
@@ -37,6 +38,7 @@ export function EmailDetail({
   email: EmailInbox;
   onClose: () => void;
 }) {
+  useModale(onClose);
   const analizza = useAnalizzaEmail();
   const genera = useGeneraOfferta();
   const generaRisposta = useGeneraRisposta();
@@ -120,6 +122,9 @@ export function EmailDetail({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Email da ${email.mittente}`}
       className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 p-4 pt-[8vh] backdrop-blur-sm"
       onClick={onClose}
     >
@@ -152,7 +157,9 @@ export function EmailDetail({
           <div>
             <div className="mb-2 flex items-center gap-2">
               <Badge variant="outline">{email.categoria}</Badge>
-              <span className={`text-xs font-medium ${prioritaColore[email.priorita]}`}>
+              <span
+                className={`text-xs font-medium ${prioritaColore[email.priorita] ?? "text-muted-foreground"}`}
+              >
                 Priorità {email.priorita}
               </span>
               <span className="text-xs text-muted-foreground">· {email.tempo} fa</span>

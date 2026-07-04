@@ -10,6 +10,23 @@ export function Documentazione() {
   const { slug } = useParams();
   const articolo = trovaArticolo(slug);
 
+  if (!articolo) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 py-24 text-center sm:px-6">
+        <p className="text-2xl font-semibold tracking-tight">Articolo non trovato</p>
+        <p className="mt-2 text-muted-foreground">
+          L'articolo richiesto non esiste o è stato spostato.
+        </p>
+        <Link
+          to="/documentazione"
+          className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          Vai alla documentazione
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
       <div className="grid gap-10 lg:grid-cols-[220px_1fr]">

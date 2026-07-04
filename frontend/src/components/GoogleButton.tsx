@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@/hooks/useAuth";
+import { toast } from "@/components/ui/toast";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
@@ -19,7 +20,17 @@ export function GoogleButton() {
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: (resp) =>
-          google.mutate(resp.credential, { onSuccess: () => navigate("/app") }),
+          google.mutate(resp.credential, {
+            onSuccess: () => navigate("/app"),
+            // Senza feedback l'utente clicca e "non succede niente".
+            onError: (err) =>
+              toast(
+                err instanceof Error && err.message
+                  ? err.message
+                  : "Accesso con Google non riuscito. Riprova.",
+                "errore"
+              ),
+          }),
       });
       window.google.accounts.id.renderButton(ref.current, {
         theme: "outline",

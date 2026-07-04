@@ -17,7 +17,13 @@ export function caricaGsi(): Promise<void> {
       document.body.appendChild(s);
     }
     s.addEventListener("load", () => resolve());
-    s.addEventListener("error", () => reject(new Error("Caricamento GSI fallito.")));
+    s.addEventListener("error", () => {
+      // Un fallimento (rete) non deve avvelenare la cache per sempre:
+      // al prossimo tentativo si ricarica lo script.
+      promessa = null;
+      s?.remove();
+      reject(new Error("Caricamento GSI fallito."));
+    });
   });
   return promessa;
 }

@@ -27,8 +27,11 @@ export function CambiaPassword() {
   return (
     <form className="space-y-4" onSubmit={invia}>
       <div className="grid gap-2">
-        <label className="text-sm font-medium">Password attuale</label>
+        <label htmlFor="pw-attuale" className="text-sm font-medium">
+          Password attuale
+        </label>
         <input
+          id="pw-attuale"
           type="password"
           value={attuale}
           onChange={(e) => setAttuale(e.target.value)}
@@ -38,8 +41,11 @@ export function CambiaPassword() {
         />
       </div>
       <div className="grid gap-2">
-        <label className="text-sm font-medium">Nuova password</label>
+        <label htmlFor="pw-nuova" className="text-sm font-medium">
+          Nuova password
+        </label>
         <input
+          id="pw-nuova"
           type="password"
           value={nuova}
           onChange={(e) => setNuova(e.target.value)}

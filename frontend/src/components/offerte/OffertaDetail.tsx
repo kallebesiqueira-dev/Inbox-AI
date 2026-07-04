@@ -1,8 +1,11 @@
-import { X, Download } from "lucide-react";
+import { useState } from "react";
+import { X, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatEuro, formatData } from "@/lib/utils";
 import { generaPdfOfferta } from "@/lib/pdf";
+import { toast } from "@/components/ui/toast";
+import { useModale } from "@/hooks/useModale";
 import type { Offerta } from "@/hooks/useOfferte";
 
 export function OffertaDetail({
@@ -12,8 +15,25 @@ export function OffertaDetail({
   offerta: Offerta;
   onClose: () => void;
 }) {
+  useModale(onClose);
+  const [scaricando, setScaricando] = useState(false);
+
+  async function scaricaPdf() {
+    setScaricando(true);
+    try {
+      await generaPdfOfferta(offerta);
+    } catch {
+      toast("Impossibile generare il PDF. Riprova.", "errore");
+    } finally {
+      setScaricando(false);
+    }
+  }
+
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Offerta ${offerta.numero}`}
       className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 p-4 pt-[8vh] backdrop-blur-sm"
       onClick={onClose}
     >
@@ -72,8 +92,13 @@ export function OffertaDetail({
         </div>
 
         <div className="border-t border-border p-4">
-          <Button className="w-full" onClick={() => generaPdfOfferta(offerta)}>
-            <Download className="size-4" /> Scarica PDF
+          <Button className="w-full" onClick={scaricaPdf} disabled={scaricando}>
+            {scaricando ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}{" "}
+            Scarica PDF
           </Button>
         </div>
       </div>

@@ -48,7 +48,7 @@ export const documentazione: DocArticolo[] = [
         passi: [
           "Accedi con email e password oppure con il tuo account Google.",
           "Apri la Dashboard per avere una panoramica dei KPI operativi.",
-          "Vai su Assistente e chiedi, ad esempio, di redigere una bozza di offerta.",
+          "Apri l'Assistente dal pulsante in basso a destra e chiedi, ad esempio, di redigere una bozza di offerta.",
           "Controlla il risultato in Offerte e fallo avanzare nel workflow di approvazione.",
         ],
       },
@@ -165,6 +165,8 @@ export const documentazione: DocArticolo[] = [
 
 export const categorieDoc = [...new Set(documentazione.map((d) => d.categoria))];
 
-export function trovaArticolo(slug?: string): DocArticolo {
-  return documentazione.find((d) => d.slug === slug) ?? documentazione[0];
+/** Senza slug ritorna il primo articolo; con slug inesistente ritorna undefined (404). */
+export function trovaArticolo(slug?: string): DocArticolo | undefined {
+  if (!slug) return documentazione[0];
+  return documentazione.find((d) => d.slug === slug);
 }

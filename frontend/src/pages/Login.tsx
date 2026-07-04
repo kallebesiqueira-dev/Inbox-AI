@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GoogleButton } from "@/components/GoogleButton";
-import { useLogin, useRegister, usePasswordDimenticata } from "@/hooks/useAuth";
+import { useLogin, useRegister, usePasswordDimenticata, useMe } from "@/hooks/useAuth";
 
 type Modalita = "login" | "registrazione" | "recupero";
 
 export function Login() {
   const navigate = useNavigate();
+  const { data: utente } = useMe();
   const [modalita, setModalita] = useState<Modalita>("login");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -40,6 +41,9 @@ export function Login() {
       : modalita === "registrazione"
         ? "Registrati"
         : "Invia link di reset";
+
+  // Sessione già attiva: inutile mostrare il login.
+  if (utente) return <Navigate to="/app" replace />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

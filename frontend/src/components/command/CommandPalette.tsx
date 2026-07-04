@@ -145,6 +145,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         <div className="flex items-center gap-2 border-b border-border px-4">
           <Search className="size-4 shrink-0 text-muted-foreground" />
           <input
+            aria-label="Cerca pagine e azioni"
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}

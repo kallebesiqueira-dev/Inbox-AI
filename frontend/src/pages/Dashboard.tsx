@@ -38,7 +38,7 @@ export function Dashboard() {
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           <Loader2 className="size-6 animate-spin" />
         </div>
-      ) : isError || !data?.metriche || !data?.oreMensili ? (
+      ) : isError || !data?.metriche || !data?.oreMensili || !data?.attivita ? (
         // Difensivo: se la risposta non ha la forma attesa (es. backend non
         // ancora aggiornato) si mostra l'errore invece di far crashare l'app.
         <div className="flex h-64 flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -67,7 +67,9 @@ function Contenuto({ data }: { data: DashboardData }) {
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary sm:size-10">
                     <Icon className="size-5" />
                   </div>
-                  <Badge variant="success">+{m.delta}%</Badge>
+                  <Badge variant={m.delta >= 0 ? "success" : "warning"}>
+                    {m.delta.toLocaleString("it-IT", { signDisplay: "always" })}%
+                  </Badge>
                 </div>
                 <p className="mt-3 text-2xl font-semibold tracking-tight sm:mt-4 sm:text-3xl">
                   {formato(chiave, m.valore)}

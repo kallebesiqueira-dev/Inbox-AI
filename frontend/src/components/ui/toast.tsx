@@ -57,7 +57,7 @@ export function Toaster() {
         return (
           <div
             key={t.id}
-            role="status"
+            role={t.tipo === "errore" ? "alert" : "status"}
             className="pointer-events-auto flex items-start gap-3 rounded-lg border border-border bg-card p-3 shadow-card"
           >
             <Icon className={cn("mt-0.5 size-4 shrink-0", colore)} />

@@ -136,6 +136,7 @@ export function ChatWidget() {
             )}
             <div className="flex items-end gap-2 rounded-xl border border-border bg-card p-1.5 focus-within:ring-2 focus-within:ring-ring">
               <textarea
+                aria-label="Scrivi un messaggio all'assistente"
                 ref={areaRef}
                 value={testo}
                 onChange={(e) => setTesto(e.target.value)}

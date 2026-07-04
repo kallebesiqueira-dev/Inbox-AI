@@ -119,8 +119,11 @@ export function Impostazioni() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Nome azienda</label>
+              <label htmlFor="imp-nome-azienda" className="text-sm font-medium">
+                Nome azienda
+              </label>
               <input
+                id="imp-nome-azienda"
                 value={imp?.nomeAzienda ?? ""}
                 onChange={(e) =>
                   setImp((p) => (p ? { ...p, nomeAzienda: e.target.value } : p))
@@ -131,8 +134,11 @@ export function Impostazioni() {
               />
             </div>
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Email aziendale</label>
+              <label htmlFor="imp-email-azienda" className="text-sm font-medium">
+                Email aziendale
+              </label>
               <input
+                id="imp-email-azienda"
                 value={imp?.emailAzienda ?? ""}
                 onChange={(e) =>
                   setImp((p) => (p ? { ...p, emailAzienda: e.target.value } : p))

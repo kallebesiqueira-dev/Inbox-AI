@@ -5,8 +5,10 @@ import { toast } from "@/components/ui/toast";
 import { formatEuro } from "@/lib/utils";
 import { useGeneraOfferta, type OffertaGenerata } from "@/hooks/useAI";
 import { useCreaOfferta } from "@/hooks/useOfferte";
+import { useModale } from "@/hooks/useModale";
 
 export function GeneraOffertaAI({ onClose }: { onClose: () => void }) {
+  useModale(onClose);
   const genera = useGeneraOfferta();
   const creaOfferta = useCreaOfferta();
   const [cliente, setCliente] = useState("");
@@ -42,6 +44,9 @@ export function GeneraOffertaAI({ onClose }: { onClose: () => void }) {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Genera offerta con AI"
       className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 p-4 pt-[8vh] backdrop-blur-sm"
       onClick={onClose}
     >
@@ -61,8 +66,11 @@ export function GeneraOffertaAI({ onClose }: { onClose: () => void }) {
 
         <div className="flex-1 space-y-4 overflow-y-auto p-5">
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Cliente</label>
+            <label htmlFor="offerta-ai-cliente" className="text-sm font-medium">
+              Cliente
+            </label>
             <input
+              id="offerta-ai-cliente"
               value={cliente}
               onChange={(e) => setCliente(e.target.value)}
               placeholder="Nome del cliente"
@@ -70,8 +78,11 @@ export function GeneraOffertaAI({ onClose }: { onClose: () => void }) {
             />
           </div>
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Richiesta</label>
+            <label htmlFor="offerta-ai-richiesta" className="text-sm font-medium">
+              Richiesta
+            </label>
             <textarea
+              id="offerta-ai-richiesta"
               value={richiesta}
               onChange={(e) => setRichiesta(e.target.value)}
               rows={3}

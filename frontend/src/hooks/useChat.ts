@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiStream } from "@/lib/api";
 
 export interface MessaggioChat {
@@ -16,12 +16,21 @@ export function useChat() {
   const messaggiRef = useRef(messaggi);
   messaggiRef.current = messaggi;
   const occupato = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Allo smontaggio si interrompe lo stream in corso: niente setState su
+  // componente smontato né lettura che continua a vuoto.
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
 
   const invia = useCallback(async (testo: string) => {
     const t = testo.trim();
     if (!t || occupato.current) return;
     occupato.current = true;
     setErrore(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     const storico: MessaggioChat[] = [
       ...messaggiRef.current,
@@ -32,7 +41,7 @@ export function useChat() {
     setInCorso(true);
 
     try {
-      const res = await apiStream("/ai/chat", { messaggi: storico });
+      const res = await apiStream("/ai/chat", { messaggi: storico }, controller.signal);
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -62,11 +71,15 @@ export function useChat() {
         setErrore("Nessuna risposta dall'assistente. Riprova.");
       }
     } catch (e) {
+      // Interruzione volontaria (smontaggio/navigazione): nessun errore da mostrare.
+      if (controller.signal.aborted) return;
       setMessaggi(storico);
       setErrore(e instanceof Error ? e.message : "Errore di comunicazione.");
     } finally {
-      setInCorso(false);
-      occupato.current = false;
+      if (!controller.signal.aborted) {
+        setInCorso(false);
+        occupato.current = false;
+      }
     }
   }, []);
 

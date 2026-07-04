@@ -70,7 +70,11 @@ export async function apiFetch<T>(
  * Variante per le risposte in streaming (es. chat AI): invia un POST con cookie
  * e CSRF e restituisce la Response, lasciando al chiamante la lettura dello stream.
  */
-export async function apiStream(path: string, body: unknown): Promise<Response> {
+export async function apiStream(
+  path: string,
+  body: unknown,
+  signal?: AbortSignal
+): Promise<Response> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
 
@@ -79,6 +83,7 @@ export async function apiStream(path: string, body: unknown): Promise<Response> 
     credentials: "include",
     headers,
     body: JSON.stringify(body),
+    signal,
   });
 
   if (!res.ok || !res.body) {

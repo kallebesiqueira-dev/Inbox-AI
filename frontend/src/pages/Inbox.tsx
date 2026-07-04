@@ -64,7 +64,12 @@ export function InboxPage() {
               role="button"
               tabIndex={0}
               onClick={() => setSelezionata(e)}
-              onKeyDown={(ev) => ev.key === "Enter" && setSelezionata(e)}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  ev.preventDefault();
+                  setSelezionata(e);
+                }
+              }}
               className="group cursor-pointer transition-shadow hover:shadow-card"
             >
               <CardContent className="flex items-center gap-4 p-4">
