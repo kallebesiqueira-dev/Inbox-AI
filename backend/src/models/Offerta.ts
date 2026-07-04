@@ -10,13 +10,9 @@ export const STATI_OFFERTA = [
 const offertaSchema = new Schema(
   {
     // Proprietario della risorsa (isolamento multi-utente).
-    userId: { type: String, index: true },
-    numero: {
-      type: String,
-      required: true,
-      default: () =>
-        `${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-    },
+    userId: { type: String },
+    // Numero progressivo per utente/anno, assegnato dal servizio alla creazione.
+    numero: { type: String, required: true },
     cliente: { type: String, required: true, trim: true },
     importo: { type: Number, required: true, min: 0 },
     stato: { type: String, enum: STATI_OFFERTA, default: "Bozza" },
@@ -32,6 +28,9 @@ const offertaSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Copre la query calda dell'elenco: filtro per proprietario+cestino, ordinato per data.
+offertaSchema.index({ userId: 1, deletedAt: 1, createdAt: -1 });
 
 export type OffertaAttrs = InferSchemaType<typeof offertaSchema>;
 export type OffertaDoc = HydratedDocument<OffertaAttrs>;

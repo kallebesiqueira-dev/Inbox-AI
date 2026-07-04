@@ -39,10 +39,55 @@ interface UtenteInterno extends Omit<UtenteDTO, "impostazioni"> {
   googleId?: string;
   resetTokenHash?: string;
   resetTokenExp?: Date;
+  passwordCambiataAl?: Date;
 }
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+// Cache (TTL breve) dell'istante dell'ultimo cambio password per utente:
+// permette a requireAuth di invalidare i token emessi prima del cambio senza
+// un giro in DB a ogni richiesta.
+const cacheCambioPassword = new Map<string, { val: number | null; scade: number }>();
+const TTL_CACHE_CAMBIO = 60_000;
+
+function segnaCambioPassword(userId: string, quando: Date) {
+  cacheCambioPassword.set(userId, {
+    val: quando.getTime(),
+    scade: Date.now() + TTL_CACHE_CAMBIO,
+  });
+}
+
+/**
+ * True se la password dell'utente è stata cambiata DOPO l'emissione del token
+ * (iat in secondi). I token emessi nello stesso secondo del cambio restano
+ * validi: è la nuova sessione aperta contestualmente al cambio.
+ */
+export async function passwordCambiataDopo(
+  userId: string,
+  iatSecondi: number
+): Promise<boolean> {
+  const ora = Date.now();
+  let voce = cacheCambioPassword.get(userId);
+  if (!voce || voce.scade < ora) {
+    let val: number | null = null;
+    if (!dbAttivo()) {
+      const u = demo.find((x) => x.id === userId);
+      if (!u) return true; // utente inesistente: sessione non valida
+      val = u.passwordCambiataAl?.getTime() ?? null;
+    } else {
+      if (!mongoose.isValidObjectId(userId)) return true;
+      const doc = await User.findById(userId).select("passwordCambiataAl").lean();
+      if (!doc) return true; // utente eliminato: sessione non valida
+      val = doc.passwordCambiataAl ? new Date(doc.passwordCambiataAl).getTime() : null;
+    }
+    // Cap difensivo: la cache non deve crescere senza limite.
+    if (cacheCambioPassword.size > 5000) cacheCambioPassword.clear();
+    voce = { val, scade: ora + TTL_CACHE_CAMBIO };
+    cacheCambioPassword.set(userId, voce);
+  }
+  return voce.val !== null && (iatSecondi + 1) * 1000 <= voce.val;
 }
 
 const dbAttivo = () => mongoose.connection.readyState === 1;
@@ -142,11 +187,15 @@ export async function cambiaPassword(
   if (!(await bcrypt.compare(attuale, u.passwordHash))) return false;
 
   const hash = await bcrypt.hash(nuova, 12);
+  const adesso = new Date();
   if (!dbAttivo()) {
     u.passwordHash = hash;
-    return true;
+    u.passwordCambiataAl = adesso;
+  } else {
+    await User.findByIdAndUpdate(id, { passwordHash: hash, passwordCambiataAl: adesso });
   }
-  await User.findByIdAndUpdate(id, { passwordHash: hash });
+  // Le sessioni emesse prima del cambio diventano subito invalide.
+  segnaCambioPassword(id, adesso);
   return true;
 }
 
@@ -175,7 +224,9 @@ export async function resetPassword(
   nuova: string
 ): Promise<boolean> {
   const hash = hashToken(token);
-  const passwordHash = await bcrypt.hash(nuova, 12);
+  const adesso = new Date();
+  // Prima si valida il token, POI si paga il costo del bcrypt: niente ~250ms
+  // di CPU regalati a ogni tentativo invalido su un endpoint pubblico.
   if (!dbAttivo()) {
     const u = demo.find(
       (x) =>
@@ -184,9 +235,11 @@ export async function resetPassword(
         x.resetTokenExp.getTime() > Date.now()
     );
     if (!u) return false;
-    u.passwordHash = passwordHash;
+    u.passwordHash = await bcrypt.hash(nuova, 12);
     u.resetTokenHash = undefined;
     u.resetTokenExp = undefined;
+    u.passwordCambiataAl = adesso;
+    segnaCambioPassword(u.id, adesso);
     return true;
   }
   const doc = await User.findOne({
@@ -194,13 +247,17 @@ export async function resetPassword(
     resetTokenExp: { $gt: new Date() },
   });
   if (!doc) return false;
+  const passwordHash = await bcrypt.hash(nuova, 12);
   await User.updateOne(
     { _id: doc._id },
     {
-      $set: { passwordHash },
+      $set: { passwordHash, passwordCambiataAl: adesso },
       $unset: { resetTokenHash: "", resetTokenExp: "" },
     }
   );
+  // Un reset avviene tipicamente perché la password è compromessa:
+  // tutte le sessioni precedenti decadono.
+  segnaCambioPassword(doc.id, adesso);
   return true;
 }
 
@@ -218,8 +275,15 @@ export async function registra(
     demo.push(u);
     return pubblico(u);
   }
-  const doc = await User.create({ email: e, nome, passwordHash });
-  return pubblico(fromDoc(doc));
+  try {
+    const doc = await User.create({ email: e, nome, passwordHash });
+    return pubblico(fromDoc(doc));
+  } catch (err) {
+    // Due registrazioni concorrenti sulla stessa email: l'indice unique vince
+    // sulla check-then-create. Si risponde 409, non 500.
+    if ((err as { code?: number }).code === 11000) return null;
+    throw err;
+  }
 }
 
 export async function autentica(
@@ -243,7 +307,19 @@ export async function daGoogle(
   nome: string
 ): Promise<{ utente: UtenteDTO; nuovo: boolean }> {
   const esistente = await trovaPerEmail(email);
-  if (esistente) return { utente: pubblico(esistente), nuovo: false };
+  if (esistente) {
+    // Collega il googleId all'account esistente al primo accesso Google,
+    // così il vincolo è esplicito e non solo implicito via email.
+    if (!esistente.googleId) {
+      if (!dbAttivo()) {
+        const du = demo.find((x) => x.id === esistente.id);
+        if (du) du.googleId = googleId;
+      } else {
+        await User.findByIdAndUpdate(esistente.id, { googleId });
+      }
+    }
+    return { utente: pubblico(esistente), nuovo: false };
+  }
 
   const e = email.toLowerCase().trim();
   if (!dbAttivo()) {

@@ -12,7 +12,11 @@ export async function elenca(req: Request, res: Response) {
     const reali = await gmail.leggiEmail(req.userId);
     return res.json(reali ?? []);
   } catch (err) {
+    // Errore reale (es. refresh token revocato da Google): va segnalato,
+    // non mascherato da casella vuota.
     console.error("[Inbox] lettura Gmail fallita:", err);
-    return res.json([]);
+    return res.status(502).json({
+      messaggio: "Impossibile leggere la casella Gmail. Prova a ricollegare l'account.",
+    });
   }
 }

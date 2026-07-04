@@ -17,13 +17,15 @@ import {
   invia as inviaGmail,
 } from "../controllers/gmail.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
-import { aiLimiter } from "../middleware/rateLimit.js";
+import { aiLimiter, inboxLimiter } from "../middleware/rateLimit.js";
+import { ah } from "../utils/asyncHandler.js";
 import authRouter from "./auth.routes.js";
 import offerteRouter from "./offerte.routes.js";
 import opportunitaRouter from "./opportunita.routes.js";
 import approvazioneRouter from "./approvazione.routes.js";
 
 const router = Router();
+const auth = ah(requireAuth);
 
 router.get("/health", (_req, res) => {
   const dbConnesso = mongoose.connection.readyState === 1;
@@ -40,27 +42,27 @@ router.get("/health", (_req, res) => {
 router.use("/auth", authRouter);
 
 // Risorse protette (sessione + CSRF)
-router.use("/offerte", requireAuth, csrfProtection, offerteRouter);
-router.use("/crm", requireAuth, csrfProtection, opportunitaRouter);
-router.use("/approvazioni", requireAuth, csrfProtection, approvazioneRouter);
+router.use("/offerte", auth, csrfProtection, offerteRouter);
+router.use("/crm", auth, csrfProtection, opportunitaRouter);
+router.use("/approvazioni", auth, csrfProtection, approvazioneRouter);
 
-// Inbox (sola lettura, protetta)
-router.get("/inbox", requireAuth, elencaInbox);
-router.get("/notifiche", requireAuth, elencaNotifiche);
+// Inbox (sola lettura, protetta; rate limit: ogni lettura può innescare l'AI)
+router.get("/inbox", auth, inboxLimiter, ah(elencaInbox));
+router.get("/notifiche", auth, ah(elencaNotifiche));
 
 // Integrazione Gmail (collegamento OAuth + lettura email reali)
-router.get("/gmail/stato", requireAuth, statoGmail);
-router.post("/gmail/connetti", requireAuth, csrfProtection, connettiGmail);
-router.post("/gmail/disconnetti", requireAuth, csrfProtection, disconnettiGmail);
-router.post("/gmail/invia", requireAuth, csrfProtection, aiLimiter, inviaGmail);
+router.get("/gmail/stato", auth, ah(statoGmail));
+router.post("/gmail/connetti", auth, csrfProtection, ah(connettiGmail));
+router.post("/gmail/disconnetti", auth, csrfProtection, ah(disconnettiGmail));
+router.post("/gmail/invia", auth, csrfProtection, aiLimiter, ah(inviaGmail));
 
 // Funzionalità AI (protette + rate limit)
-router.post("/ai/analizza-email", requireAuth, csrfProtection, aiLimiter, analizzaEmail);
-router.post("/ai/genera-offerta", requireAuth, csrfProtection, aiLimiter, generaOfferta);
-router.post("/ai/genera-risposta", requireAuth, csrfProtection, aiLimiter, generaRisposta);
-router.post("/ai/chat", requireAuth, csrfProtection, aiLimiter, chat);
+router.post("/ai/analizza-email", auth, csrfProtection, aiLimiter, ah(analizzaEmail));
+router.post("/ai/genera-offerta", auth, csrfProtection, aiLimiter, ah(generaOfferta));
+router.post("/ai/genera-risposta", auth, csrfProtection, aiLimiter, ah(generaRisposta));
+router.post("/ai/chat", auth, csrfProtection, aiLimiter, ah(chat));
 
 // KPI, serie mensile e attività della dashboard (protetti)
-router.get("/dashboard/kpi", requireAuth, kpi);
+router.get("/dashboard/kpi", auth, ah(kpi));
 
 export default router;

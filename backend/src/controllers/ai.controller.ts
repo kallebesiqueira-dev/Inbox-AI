@@ -78,9 +78,14 @@ export async function generaRisposta(req: Request, res: Response) {
     corpo,
   ].join("\n");
 
+  const controllo = new AbortController();
+  res.on("close", () => controllo.abort());
   try {
     let bozza = "";
-    for await (const chunk of ai.chat([{ ruolo: "utente", contenuto: prompt }])) {
+    for await (const chunk of ai.chat(
+      [{ ruolo: "utente", contenuto: prompt }],
+      controllo.signal
+    )) {
       bozza += chunk;
     }
     res.json({ bozza: bozza.trim() });
@@ -107,8 +112,13 @@ export async function chat(req: Request, res: Response) {
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
+  // Se il client chiude (tab chiusa, navigazione), si interrompe la generazione
+  // upstream invece di consumarla per intero a vuoto.
+  const controllo = new AbortController();
+  res.on("close", () => controllo.abort());
+
   try {
-    for await (const chunk of ai.chat(parsed.data.messaggi)) {
+    for await (const chunk of ai.chat(parsed.data.messaggi, controllo.signal)) {
       // Il contenuto è codificato in JSON: niente newline grezzi che rompano l'evento.
       res.write(`data: ${JSON.stringify(chunk)}\n\n`);
     }

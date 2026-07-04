@@ -18,6 +18,11 @@ export function errorHandler(
   if (err.type === "entity.too.large") {
     return res.status(413).json({ messaggio: "Corpo della richiesta troppo grande." });
   }
+  // Errori applicativi marcati con uno status 4xx (es. CORS): il messaggio è
+  // nostro e sicuro da esporre.
+  if (err.status && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ messaggio: err.message });
+  }
   console.error("[Errore]", err);
   res.status(500).json({ messaggio: "Si è verificato un errore interno." });
 }

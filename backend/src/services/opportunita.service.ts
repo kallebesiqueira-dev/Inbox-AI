@@ -19,16 +19,6 @@ export interface OpportunitaDTO {
   avatar?: string;
 }
 
-const semi: OpportunitaInput[] = [
-  { cliente: "Gialli SRL", valore: 9000, fase: "Nuovo" },
-  { cliente: "Marini SpA", valore: 15000, fase: "Nuovo" },
-  { cliente: "Rossi S.p.A.", valore: 12400, fase: "In Analisi" },
-  { cliente: "Studio Ferrari", valore: 5600, fase: "Offerta Inviata" },
-  { cliente: "Conti & Figli", valore: 18200, fase: "Offerta Inviata" },
-  { cliente: "Verdi & Co", valore: 21300, fase: "Negoziazione" },
-  { cliente: "Bianchi SRL", valore: 8750, fase: "Chiuso" },
-];
-
 export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
   model: Opportunita as unknown as Model<OpportunitaInput>,
   toDTO: (d) => ({
@@ -38,7 +28,6 @@ export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
     fase: d.fase as FaseCrm,
     avatar: (d.avatar as string | undefined) ?? undefined,
   }),
-  semi,
   demo: (input, id) => ({
     id,
     cliente: input.cliente,

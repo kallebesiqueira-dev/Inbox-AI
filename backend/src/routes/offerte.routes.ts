@@ -2,9 +2,10 @@ import { Router } from "express";
 import { z } from "zod";
 import type { Request, Response } from "express";
 import { STATI_OFFERTA } from "../models/Offerta.js";
-import { offerteCrud } from "../services/offerte.service.js";
+import { offerteCrud, prossimoNumeroOfferta } from "../services/offerte.service.js";
 import { approvazioneCrud } from "../services/approvazione.service.js";
 import { controllerCrud } from "../controllers/crud.controller.js";
+import { ah } from "../utils/asyncHandler.js";
 
 const schema = z.object({
   cliente: z.string().min(1, "Il cliente è obbligatorio.").max(200),
@@ -35,7 +36,9 @@ async function crea(req: Request, res: Response) {
       .json({ messaggio: "Dati non validi.", errori: p.error.flatten().fieldErrors });
   }
   const userId = req.userId ?? "";
-  const offerta = await offerteCrud.crea(userId, p.data);
+  // Numerazione progressiva per utente/anno, assegnata dal server (atomica).
+  const input = { ...p.data, numero: p.data.numero ?? (await prossimoNumeroOfferta(userId)) };
+  const offerta = await offerteCrud.crea(userId, input);
   await approvazioneCrud.crea(userId, {
     tipo: "Invio offerta",
     oggetto: `Offerta #${offerta.numero} — ${offerta.cliente}`,
@@ -47,7 +50,7 @@ async function crea(req: Request, res: Response) {
 const router = Router();
 router.get("/", ctrl.elenca);
 router.get("/cestino", ctrl.cestino);
-router.post("/", crea);
+router.post("/", ah(crea));
 router.patch("/:id", ctrl.aggiorna);
 router.delete("/:id", ctrl.elimina);
 router.post("/:id/ripristina", ctrl.ripristina);

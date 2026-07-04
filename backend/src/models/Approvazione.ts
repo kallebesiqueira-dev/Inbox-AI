@@ -17,7 +17,7 @@ export const FASI_APPROVAZIONE = [
 const approvazioneSchema = new Schema(
   {
     // Proprietario della risorsa (isolamento multi-utente).
-    userId: { type: String, index: true },
+    userId: { type: String },
     tipo: { type: String, enum: TIPI_APPROVAZIONE, required: true },
     oggetto: { type: String, required: true, trim: true },
     fase: { type: String, enum: FASI_APPROVAZIONE, default: "Revisione" },
@@ -27,6 +27,9 @@ const approvazioneSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Copre la query calda dell'elenco: filtro per proprietario+cestino, ordinato per data.
+approvazioneSchema.index({ userId: 1, deletedAt: 1, createdAt: -1 });
 
 export type ApprovazioneAttrs = InferSchemaType<typeof approvazioneSchema>;
 export type ApprovazioneDoc = HydratedDocument<ApprovazioneAttrs>;

@@ -12,33 +12,30 @@ export interface Notifica {
 /** Notifiche derivate dall'attività reale dell'utente (no dati demo). */
 export async function elenca(req: Request, res: Response) {
   const userId = req.userId ?? "";
-  const [offerte, opportunita, approvazioni] = await Promise.all([
-    offerteCrud.elenca(userId),
-    opportunitaCrud.elenca(userId),
-    approvazioneCrud.elenca(userId),
+  // Filtri e limiti in DB: si caricano solo gli elementi che finiscono in notifica.
+  const [approvazioni, offerte, opportunita] = await Promise.all([
+    approvazioneCrud.elenca(userId, { limite: 3, filtro: { fase: { $ne: "Esecuzione" } } }),
+    offerteCrud.elenca(userId, { limite: 2 }),
+    opportunitaCrud.elenca(userId, { limite: 2, filtro: { fase: "Negoziazione" } }),
   ]);
 
   const notifiche: Notifica[] = [];
 
-  for (const a of approvazioni
-    .filter((x) => x.fase !== "Esecuzione")
-    .slice(0, 3)) {
+  for (const a of approvazioni) {
     notifiche.push({
       id: `appr-${a.id}`,
       titolo: "Approvazione in attesa",
       descrizione: `${a.oggetto} · ${a.fase}`,
     });
   }
-  for (const o of offerte.slice(0, 2)) {
+  for (const o of offerte) {
     notifiche.push({
       id: `off-${o.id}`,
       titolo: "Offerta",
       descrizione: `#${o.numero} — ${o.cliente} (${o.stato})`,
     });
   }
-  for (const o of opportunita
-    .filter((x) => x.fase === "Negoziazione")
-    .slice(0, 2)) {
+  for (const o of opportunita) {
     notifiche.push({
       id: `opp-${o.id}`,
       titolo: "Opportunità in negoziazione",

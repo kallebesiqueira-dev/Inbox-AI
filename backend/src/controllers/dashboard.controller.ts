@@ -22,18 +22,30 @@ function tempoRelativo(iso?: string): string {
 
 export async function kpi(req: Request, res: Response) {
   const userId = req.userId ?? "";
-  const [offerte, opportunita, approvazioni] = await Promise.all([
-    offerteCrud.elenca(userId),
-    opportunitaCrud.elenca(userId),
-    approvazioneCrud.elenca(userId),
+  // Conteggi in DB + solo i pochi elementi recenti per il feed attività:
+  // niente caricamento di intere collezioni per fare .length.
+  const [
+    offerteGenerate,
+    opportunitaTotali,
+    opportunitaAperte,
+    approvazioniTotali,
+    offerte,
+    opportunita,
+    approvazioni,
+  ] = await Promise.all([
+    offerteCrud.conta(userId),
+    opportunitaCrud.conta(userId),
+    opportunitaCrud.conta(userId, { fase: { $ne: "Chiuso" } }),
+    approvazioneCrud.conta(userId),
+    offerteCrud.elenca(userId, { limite: 2 }),
+    opportunitaCrud.elenca(userId, { limite: 1 }),
+    approvazioneCrud.elenca(userId, { limite: 1 }),
   ]);
 
   // Metriche calcolate sui dati reali dell'utente.
-  const offerteGenerate = offerte.length;
-  const opportunitaAperte = opportunita.filter((o) => o.fase !== "Chiuso").length;
-  const emailElaborate = offerte.length + opportunita.length + approvazioni.length;
+  const emailElaborate = offerteGenerate + opportunitaTotali + approvazioniTotali;
   const oreRisparmiate = Math.round(
-    offerteGenerate * 1.5 + opportunita.length * 0.8 + approvazioni.length * 0.5
+    offerteGenerate * 1.5 + opportunitaTotali * 0.8 + approvazioniTotali * 0.5
   );
 
   const attivita: { testo: string; tempo: string }[] = [];

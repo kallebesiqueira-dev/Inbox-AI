@@ -24,12 +24,6 @@ export interface ApprovazioneDTO {
   richiedente: string;
 }
 
-const semi: ApprovazioneInput[] = [
-  { tipo: "Invio offerta", oggetto: "Offerta #2025-086 — Rossi S.p.A.", fase: "Approvazione" },
-  { tipo: "Invio documento", oggetto: "Contratto fornitura — Bianchi SRL", fase: "Revisione" },
-  { tipo: "Operazione finanziaria", oggetto: "Nota di credito — Verdi & Co", fase: "Approvazione" },
-];
-
 export const approvazioneCrud = creaCrud<ApprovazioneInput, ApprovazioneDTO>({
   model: Approvazione as unknown as Model<ApprovazioneInput>,
   toDTO: (d) => ({
@@ -39,7 +33,6 @@ export const approvazioneCrud = creaCrud<ApprovazioneInput, ApprovazioneDTO>({
     fase: d.fase as FaseApprovazione,
     richiedente: d.richiedente ?? "Sistema AI",
   }),
-  semi,
   demo: (input, id) => ({
     id,
     tipo: input.tipo,

@@ -39,6 +39,11 @@ async function classifica(email: EmailGmail): Promise<EmailGmail> {
       corpo: email.corpo,
     });
     const c = { categoria: a.categoria, priorita: a.priorita };
+    // Cap FIFO: la cache non deve crescere senza limite per tutta la vita del processo.
+    if (cacheClassificazione.size >= 500) {
+      const piuVecchia = cacheClassificazione.keys().next().value;
+      if (piuVecchia) cacheClassificazione.delete(piuVecchia);
+    }
     cacheClassificazione.set(email.id, c);
     return { ...email, ...c };
   } catch {
@@ -66,11 +71,15 @@ async function bearer(token: string, url: string) {
   return r.json();
 }
 
-/** Scambia il codice OAuth con i token e collega Gmail all'utente. */
+/**
+ * Scambia il codice OAuth con i token e collega Gmail all'utente.
+ * "riconsenso" = Google non ha fornito un refresh token e non ne abbiamo uno
+ * salvato: serve ripetere il consenso (prompt=consent) lato client.
+ */
 export async function connetti(
   userId: string,
   code: string
-): Promise<{ email: string } | null> {
+): Promise<{ email: string } | null | "riconsenso"> {
   if (!dbAttivo() || !mongoose.isValidObjectId(userId)) return null;
   const oauth = client();
   const { tokens } = await oauth.getToken(code);
@@ -81,10 +90,17 @@ export async function connetti(
   };
   const email = profilo.emailAddress ?? "";
 
-  const update: Record<string, string> = { gmailEmail: email };
   // Il refresh token arriva solo al primo consenso: se assente, si mantiene quello esistente.
-  if (tokens.refresh_token) update.gmailToken = cifra(tokens.refresh_token);
-  await User.findByIdAndUpdate(userId, update);
+  if (!tokens.refresh_token) {
+    const doc = await User.findById(userId).select("gmailToken");
+    if (!doc?.gmailToken) return "riconsenso";
+    await User.findByIdAndUpdate(userId, { gmailEmail: email });
+    return { email };
+  }
+  await User.findByIdAndUpdate(userId, {
+    gmailEmail: email,
+    gmailToken: cifra(tokens.refresh_token),
+  });
   return { email };
 }
 
@@ -92,7 +108,9 @@ export async function stato(
   userId: string
 ): Promise<{ connesso: boolean; email?: string }> {
   if (!dbAttivo() || !mongoose.isValidObjectId(userId)) return { connesso: false };
-  const doc = await User.findById(userId);
+  // Proiezione: il documento User trasporta anche l'avatar (fino a 500KB),
+  // che qui non serve.
+  const doc = await User.findById(userId).select("gmailToken gmailEmail");
   return doc?.gmailToken
     ? { connesso: true, email: (doc.gmailEmail as string) ?? undefined }
     : { connesso: false };
@@ -108,7 +126,7 @@ export async function disconnetti(userId: string): Promise<void> {
 /** Legge le email recenti dalla casella Gmail collegata. null = non collegato. */
 export async function leggiEmail(userId: string): Promise<EmailGmail[] | null> {
   if (!dbAttivo() || !mongoose.isValidObjectId(userId)) return null;
-  const doc = await User.findById(userId);
+  const doc = await User.findById(userId).select("gmailToken");
   const blob = doc?.gmailToken as string | undefined;
   if (!blob) return null;
   const refresh = decifra(blob);
@@ -215,7 +233,7 @@ export async function inviaEmail(
   opts: { to: string; oggetto: string; corpo: string; threadId?: string }
 ): Promise<boolean> {
   if (!dbAttivo() || !mongoose.isValidObjectId(userId)) return false;
-  const doc = await User.findById(userId);
+  const doc = await User.findById(userId).select("gmailToken gmailEmail");
   const blob = doc?.gmailToken as string | undefined;
   if (!blob) return false;
   const refresh = decifra(blob);

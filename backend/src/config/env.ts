@@ -62,6 +62,14 @@ if (isProd) {
     );
     process.exit(1);
   }
+  // Senza CLIENT_URL reale il CORS bloccherebbe il frontend e i link di reset
+  // password punterebbero a localhost: meglio fallire subito e in modo chiaro.
+  if (env.CLIENT_URL.includes("localhost")) {
+    console.error(
+      "[Config] CLIENT_URL deve essere impostata al dominio del frontend in produzione."
+    );
+    process.exit(1);
+  }
 }
 
 // Segreto JWT: in produzione è garantito dal controllo sopra. In sviluppo si usa

@@ -22,9 +22,14 @@ const userSchema = new Schema(
     // Reset password: hash del token (mai in chiaro) + scadenza.
     resetTokenHash: { type: String },
     resetTokenExp: { type: Date },
+    // Istante dell'ultimo cambio/reset password: i token emessi prima non valgono più.
+    passwordCambiataAl: { type: Date },
   },
   { timestamps: true }
 );
+
+// Lookup del token di reset senza collection scan (sparse: solo chi ha un reset attivo).
+userSchema.index({ resetTokenHash: 1 }, { sparse: true });
 
 export type UserAttrs = InferSchemaType<typeof userSchema>;
 export type UserDoc = HydratedDocument<UserAttrs>;

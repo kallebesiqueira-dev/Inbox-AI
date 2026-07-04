@@ -1,5 +1,6 @@
-import type { Model } from "mongoose";
+import mongoose, { type Model } from "mongoose";
 import { Offerta, STATI_OFFERTA } from "../models/Offerta.js";
+import { Contatore } from "../models/Contatore.js";
 import { creaCrud } from "./crud.js";
 
 export type Stato = (typeof STATI_OFFERTA)[number];
@@ -30,22 +31,35 @@ export interface OffertaDTO {
   voci: VoceOfferta[];
 }
 
-function generaNumero(): string {
-  return `${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
-}
+const contatoriDemo = new Map<string, number>();
 
-const semi: OffertaInput[] = [
-  { numero: "2025-086", cliente: "Rossi S.p.A.", importo: 12400, stato: "Bozza" },
-  { numero: "2025-085", cliente: "Bianchi SRL", importo: 8750, stato: "In revisione" },
-  { numero: "2025-084", cliente: "Verdi & Co", importo: 21300, stato: "Approvata" },
-  { numero: "2025-083", cliente: "Studio Ferrari", importo: 5600, stato: "Inviata" },
-];
+/**
+ * Numero progressivo per utente/anno (es. "2026-007"): incremento atomico su
+ * Mongo, così due creazioni concorrenti non possono produrre lo stesso numero.
+ */
+export async function prossimoNumeroOfferta(userId: string): Promise<string> {
+  const anno = new Date().getFullYear();
+  const chiave = `offerta:${userId}:${anno}`;
+  let progressivo: number;
+  if (mongoose.connection.readyState !== 1) {
+    progressivo = (contatoriDemo.get(chiave) ?? 0) + 1;
+    contatoriDemo.set(chiave, progressivo);
+  } else {
+    const doc = await Contatore.findOneAndUpdate(
+      { chiave },
+      { $inc: { valore: 1 } },
+      { new: true, upsert: true }
+    );
+    progressivo = doc.valore;
+  }
+  return `${anno}-${String(progressivo).padStart(3, "0")}`;
+}
 
 export const offerteCrud = creaCrud<OffertaInput, OffertaDTO>({
   model: Offerta as unknown as Model<OffertaInput>,
   toDTO: (d) => ({
     id: d.id,
-    numero: d.numero ?? generaNumero(),
+    numero: d.numero ?? "—",
     cliente: d.cliente,
     importo: d.importo,
     stato: d.stato as Stato,
@@ -56,10 +70,9 @@ export const offerteCrud = creaCrud<OffertaInput, OffertaDTO>({
       importo: v.importo,
     })),
   }),
-  semi,
   demo: (input, id) => ({
     id,
-    numero: input.numero ?? generaNumero(),
+    numero: input.numero ?? "—",
     cliente: input.cliente,
     importo: input.importo,
     stato: input.stato ?? "Bozza",

@@ -59,7 +59,13 @@ app.use(
       } catch {
         /* origine non valida */
       }
-      cb(new Error("Origine non consentita dal CORS."));
+      // Marcato 403: è un rifiuto previsto, non un errore interno da loggare
+      // con stack trace.
+      const rifiuto = new Error("Origine non consentita dal CORS.") as Error & {
+        status?: number;
+      };
+      rifiuto.status = 403;
+      cb(rifiuto);
     },
     credentials: true,
   })

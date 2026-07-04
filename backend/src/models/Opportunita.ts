@@ -11,7 +11,7 @@ export const FASI_CRM = [
 const opportunitaSchema = new Schema(
   {
     // Proprietario della risorsa (isolamento multi-utente).
-    userId: { type: String, index: true },
+    userId: { type: String },
     cliente: { type: String, required: true, trim: true },
     valore: { type: Number, required: true, min: 0 },
     fase: { type: String, enum: FASI_CRM, default: "Nuovo" },
@@ -22,6 +22,9 @@ const opportunitaSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Copre la query calda dell'elenco: filtro per proprietario+cestino, ordinato per data.
+opportunitaSchema.index({ userId: 1, deletedAt: 1, createdAt: -1 });
 
 export type OpportunitaAttrs = InferSchemaType<typeof opportunitaSchema>;
 export type OpportunitaDoc = HydratedDocument<OpportunitaAttrs>;

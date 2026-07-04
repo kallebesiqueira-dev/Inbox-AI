@@ -46,6 +46,9 @@ export interface AIProvider {
   readonly nome: string;
   analizzaEmail(email: EmailDaAnalizzare): Promise<RisultatoAnalisi>;
   generaOfferta(dati: DatiOfferta): Promise<OffertaGenerata>;
-  /** Conversazione con l'assistente: produce la risposta in streaming (chunk di testo). */
-  chat(messaggi: MessaggioChat[]): AsyncIterable<string>;
+  /**
+   * Conversazione con l'assistente: produce la risposta in streaming (chunk di testo).
+   * Il segnale opzionale interrompe la generazione upstream se il client si disconnette.
+   */
+  chat(messaggi: MessaggioChat[], segnale?: AbortSignal): AsyncIterable<string>;
 }

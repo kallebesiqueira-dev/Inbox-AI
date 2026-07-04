@@ -2,8 +2,19 @@ import mongoose, { Model, HydratedDocument } from "mongoose";
 
 const dbAttivo = () => mongoose.connection.readyState === 1;
 
+/** Filtro semplice: uguaglianza o { $ne: valore } per campo. */
+export type Filtro = Record<string, unknown>;
+
+export interface OpzioniElenco {
+  /** Numero massimo di elementi (i più recenti). */
+  limite?: number;
+  filtro?: Filtro;
+}
+
 export interface Crud<TDTO, TInput> {
-  elenca(userId: string): Promise<TDTO[]>;
+  elenca(userId: string, opzioni?: OpzioniElenco): Promise<TDTO[]>;
+  /** Conteggio senza caricare i documenti (dashboard/notifiche). */
+  conta(userId: string, filtro?: Filtro): Promise<number>;
   elencaCestino(userId: string): Promise<TDTO[]>;
   crea(userId: string, input: TInput): Promise<TDTO>;
   aggiorna(userId: string, id: string, patch: Partial<TInput>): Promise<TDTO | null>;
@@ -13,8 +24,17 @@ export interface Crud<TDTO, TInput> {
   ripristina(userId: string, id: string): Promise<TDTO | null>;
   /** Elimina definitivamente (svuota dal cestino). */
   eliminaDefinitivo(userId: string, id: string): Promise<boolean>;
-  /** Crea i dati iniziali di esempio per un nuovo utente. */
-  seedPerUtente(userId: string): Promise<void>;
+}
+
+// Valuta il filtro sul DTO in memoria (modalità demo): supporta uguaglianza e $ne.
+function corrisponde(dto: Record<string, unknown>, filtro?: Filtro): boolean {
+  if (!filtro) return true;
+  return Object.entries(filtro).every(([campo, atteso]) => {
+    if (atteso && typeof atteso === "object" && "$ne" in atteso) {
+      return dto[campo] !== (atteso as { $ne: unknown }).$ne;
+    }
+    return dto[campo] === atteso;
+  });
 }
 
 /**
@@ -28,7 +48,6 @@ export function creaCrud<
 >(opts: {
   model: Model<TInput>;
   toDTO: (doc: HydratedDocument<TInput>) => TDTO;
-  semi: TInput[];
   demo: (input: TInput, id: string) => TDTO;
 }): Crud<TDTO, TInput> {
   interface Riga {
@@ -42,11 +61,35 @@ export function creaCrud<
   const model = opts.model as unknown as Model<any>;
 
   const crud: Crud<TDTO, TInput> = {
-    async elenca(userId) {
-      if (!dbAttivo())
-        return memoria.filter((r) => r.userId === userId && !r.cestino).map((r) => r.dto);
-      const docs = await model.find({ userId, deletedAt: null }).sort({ createdAt: -1 });
+    async elenca(userId, opzioni) {
+      if (!dbAttivo()) {
+        const righe = memoria
+          .filter(
+            (r) =>
+              r.userId === userId &&
+              !r.cestino &&
+              corrisponde(r.dto as Record<string, unknown>, opzioni?.filtro)
+          )
+          .map((r) => r.dto);
+        return opzioni?.limite ? righe.slice(0, opzioni.limite) : righe;
+      }
+      let query = model
+        .find({ userId, deletedAt: null, ...(opzioni?.filtro ?? {}) })
+        .sort({ createdAt: -1 });
+      if (opzioni?.limite) query = query.limit(opzioni.limite);
+      const docs = await query;
       return docs.map(opts.toDTO);
+    },
+    async conta(userId, filtro) {
+      if (!dbAttivo()) {
+        return memoria.filter(
+          (r) =>
+            r.userId === userId &&
+            !r.cestino &&
+            corrisponde(r.dto as Record<string, unknown>, filtro)
+        ).length;
+      }
+      return model.countDocuments({ userId, deletedAt: null, ...(filtro ?? {}) });
     },
     async elencaCestino(userId) {
       if (!dbAttivo())
@@ -130,11 +173,6 @@ export function creaCrud<
       if (!mongoose.isValidObjectId(id)) return false;
       const doc = await model.findOneAndDelete({ _id: id, userId });
       return Boolean(doc);
-    },
-    async seedPerUtente(userId) {
-      for (const input of opts.semi) {
-        await crud.crea(userId, input);
-      }
     },
   };
 

@@ -53,7 +53,7 @@ export class DefaultProvider implements AIProvider {
     };
   }
 
-  async *chat(messaggi: MessaggioChat[]): AsyncIterable<string> {
+  async *chat(messaggi: MessaggioChat[], segnale?: AbortSignal): AsyncIterable<string> {
     const ultimo = [...messaggi].reverse().find((m) => m.ruolo === "utente");
     const richiesta = ultimo ? ` riguardo a "${ultimo.contenuto.slice(0, 160)}"` : "";
     const testo =
@@ -63,6 +63,7 @@ export class DefaultProvider implements AIProvider {
       "Indica pure l'attività che vuoi avviare.";
     // Emissione parola per parola per un effetto coerente con lo streaming reale.
     for (const parola of testo.split(" ")) {
+      if (segnale?.aborted) return;
       yield parola + " ";
     }
   }

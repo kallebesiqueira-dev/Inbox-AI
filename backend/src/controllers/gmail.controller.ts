@@ -16,6 +16,12 @@ export async function connetti(req: Request, res: Response) {
     const r = req.userId
       ? await gmail.connetti(req.userId, parsed.data.code)
       : null;
+    if (r === "riconsenso") {
+      return res.status(409).json({
+        messaggio:
+          "Google non ha fornito le credenziali complete. Scollega l'account Google dalle app autorizzate e riprova il collegamento.",
+      });
+    }
     if (!r) return res.status(400).json({ messaggio: "Impossibile collegare Gmail." });
     res.json({ connesso: true, email: r.email });
   } catch (err) {

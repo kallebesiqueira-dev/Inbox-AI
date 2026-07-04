@@ -17,3 +17,16 @@ export const aiLimiter = rateLimit({
   legacyHeaders: false,
   message: { messaggio: "Troppe richieste AI. Riprova tra poco." },
 });
+
+/**
+ * Limite sull'inbox: ogni lettura può innescare classificazioni AI delle email
+ * (cache a parte), quindi non può restare senza tetto. Più permissivo del
+ * limiter AI: la UI la aggiorna periodicamente.
+ */
+export const inboxLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { messaggio: "Troppe richieste. Riprova tra poco." },
+});

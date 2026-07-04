@@ -15,6 +15,8 @@ export interface SessionePayload {
   jti: string;
   /** Scadenza in secondi epoch. */
   exp: number;
+  /** Emissione in secondi epoch: i token emessi prima di un cambio password non valgono più. */
+  iat: number;
 }
 
 export function firmaToken(userId: string): string {
@@ -25,12 +27,14 @@ export function firmaToken(userId: string): string {
 
 export function verificaToken(token: string): SessionePayload | null {
   try {
-    const payload = jwt.verify(token, jwtSecret);
+    // Allowlist esplicita dell'algoritmo: mai accettare token firmati diversamente.
+    const payload = jwt.verify(token, jwtSecret, { algorithms: ["HS256"] });
     if (
       typeof payload !== "object" ||
       !payload.sub ||
       !payload.jti ||
-      !payload.exp
+      !payload.exp ||
+      !payload.iat
     ) {
       return null;
     }
@@ -38,6 +42,7 @@ export function verificaToken(token: string): SessionePayload | null {
       sub: String(payload.sub),
       jti: String(payload.jti),
       exp: Number(payload.exp),
+      iat: Number(payload.iat),
     };
   } catch {
     return null;

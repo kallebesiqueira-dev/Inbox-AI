@@ -124,9 +124,12 @@ export class GroqProvider implements AIProvider {
     }
   }
 
-  async *chat(messaggi: MessaggioChat[]): AsyncIterable<string> {
+  async *chat(messaggi: MessaggioChat[], segnale?: AbortSignal): AsyncIterable<string> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 60_000);
+    // Client disconnesso → si interrompe anche la completion upstream
+    // (niente token generati e pagati per nessuno).
+    segnale?.addEventListener("abort", () => controller.abort(), { once: true });
     let emesso = false;
     try {
       const res = await fetch(ENDPOINT, {
@@ -183,6 +186,8 @@ export class GroqProvider implements AIProvider {
         }
       }
     } catch (err) {
+      // Interruzione richiesta dal client: nessun fallback, si chiude e basta.
+      if (segnale?.aborted) return;
       console.error("[AI:groq] chat fallita, uso il fallback:", err);
       // Ricade sull'euristica solo se non è ancora stato emesso alcun testo,
       // per non mescolare output reale e di fallback.

@@ -188,25 +188,27 @@ const dimenticataSchema = z.object({ email: z.string().email("Email non valida."
 
 export async function passwordDimenticata(req: Request, res: Response) {
   const parsed = dimenticataSchema.safeParse(req.body);
-  // Risposta sempre 200 per non rivelare se l'email esiste.
-  if (parsed.success) {
-    const token = await auth.creaTokenReset(parsed.data.email);
-    if (token) {
-      const base = env.CLIENT_URL.split(",")[0].trim();
-      const link = `${base}/reset-password?token=${token}`;
-      const html = `
-        <p>Hai richiesto il reset della password di Inbox AI.</p>
-        <p><a href="${link}">Reimposta la password</a> (valido 1 ora).</p>
-        <p>Se non sei stato tu, ignora questa email.</p>`;
-      const inviata = await inviaEmailSistema(
-        parsed.data.email,
-        "Reset della password — Inbox AI",
-        html
-      );
-      if (!inviata) console.log(`[Reset] link (SMTP non configurato): ${link}`);
-    }
-  }
+  // Risposta immediata e identica in ogni caso: se si attendesse l'invio SMTP
+  // solo quando l'email esiste, il tempo di risposta rivelerebbe l'esistenza
+  // dell'account (oracolo di timing). Il lavoro prosegue in background.
   res.json({ messaggio: "Se l'email esiste, riceverai le istruzioni." });
+  if (!parsed.success) return;
+  void (async () => {
+    const token = await auth.creaTokenReset(parsed.data.email);
+    if (!token) return;
+    const base = env.CLIENT_URL.split(",")[0].trim();
+    const link = `${base}/reset-password?token=${token}`;
+    const html = `
+      <p>Hai richiesto il reset della password di Inbox AI.</p>
+      <p><a href="${link}">Reimposta la password</a> (valido 1 ora).</p>
+      <p>Se non sei stato tu, ignora questa email.</p>`;
+    const inviata = await inviaEmailSistema(
+      parsed.data.email,
+      "Reset della password — Inbox AI",
+      html
+    );
+    if (!inviata) console.log(`[Reset] link (SMTP non configurato): ${link}`);
+  })().catch((err) => console.error("[Reset] invio email fallito:", err));
 }
 
 const resetSchema = z.object({
