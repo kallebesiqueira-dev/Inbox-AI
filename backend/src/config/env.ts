@@ -25,6 +25,9 @@ const schema = z.object({
   // SMTP per le email di sistema (es. reset password): Gmail + "password per le app".
   GMAIL_APP_USER: z.string().optional(),
   GMAIL_APP_PASSWORD: z.string().optional(),
+  // Impostata automaticamente da Render con l'URL pubblico del servizio.
+  // Se presente, il server si auto-pinga per evitare lo spin-down del piano free.
+  RENDER_EXTERNAL_URL: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

@@ -1,5 +1,6 @@
 import { env, isProd } from "./config/env.js";
 import express from "express";
+import compression from "compression";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -15,6 +16,15 @@ const app = express();
 if (isProd) app.set("trust proxy", 1);
 
 app.use(helmet());
+
+// Gzip sulle risposte JSON. Escluso lo stream SSE della chat: la compressione
+// bufferizza i chunk e romperebbe lo streaming incrementale.
+app.use(
+  compression({
+    filter: (req, res) =>
+      req.path !== "/api/ai/chat" && compression.filter(req, res),
+  })
+);
 
 // Allowlist CORS: origini esplicite da CLIENT_URL (separate da virgola).
 const consentite = env.CLIENT_URL.split(",")
@@ -70,6 +80,30 @@ async function avvia() {
   const server = app.listen(env.PORT, () => {
     console.log(`[Server] Inbox AI API in ascolto sulla porta ${env.PORT}`);
   });
+
+  // Dietro un reverse proxy (Render) il keep-alive di Node (default 5s) DEVE
+  // superare l'idle timeout del proxy: altrimenti Node chiude il socket proprio
+  // mentre il proxy inoltra una richiesta → reset di connessione intermittente.
+  // I GET vengono ritentati dal browser, i POST no: login/registrazione
+  // fallivano a caso con ERR_CONNECTION_CLOSED. headersTimeout > keepAliveTimeout.
+  server.keepAliveTimeout = 120_000;
+  server.headersTimeout = 125_000;
+
+  // Anti spin-down (piano free di Render): il servizio si auto-pinga tramite
+  // l'URL pubblico ogni 10 minuti, così il traffico in ingresso non si azzera
+  // mai e il container non viene ibernato (niente cold start da ~30s).
+  // Più affidabile di un cron esterno (i cron di GitHub Actions arrivano in
+  // ritardo anche di 20+ minuti). unref(): non blocca l'arresto del processo.
+  if (isProd && env.RENDER_EXTERNAL_URL) {
+    const urlPing = `${env.RENDER_EXTERNAL_URL.replace(/\/$/, "")}/api/health`;
+    const DIECI_MINUTI = 10 * 60 * 1000;
+    setInterval(() => {
+      fetch(urlPing, { signal: AbortSignal.timeout(30_000) }).catch((err) => {
+        console.warn(`[KeepAlive] Ping fallito: ${err?.message ?? err}`);
+      });
+    }, DIECI_MINUTI).unref();
+    console.log(`[KeepAlive] Auto-ping attivo ogni 10 minuti su ${urlPing}`);
+  }
 
   // Arresto controllato (Render invia SIGTERM ad ogni deploy).
   const arresta = (segnale: string) => {
