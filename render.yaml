@@ -9,7 +9,9 @@ services:
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
-    autoDeploy: true
+    # Il deploy passa dal CI (hook dopo build+test verdi): l'autoDeploy del
+    # repo collegato salterebbe i test e produrrebbe deploy doppi.
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,8 +21,12 @@ services:
         sync: false
       - key: MONGODB_URI
         sync: false
+      # ATTENZIONE: mai rigenerare automaticamente. La chiave AES dei token
+      # Gmail è derivata da JWT_SECRET: ruotarlo invalida tutte le sessioni E
+      # rende indecifrabili i token Gmail salvati (tutti dovrebbero ricollegare
+      # la casella).
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
       # Per usare Groq: impostare AI_PROVIDER=groq e AI_API_KEY con la chiave.
       - key: AI_PROVIDER
         value: default
@@ -30,4 +36,12 @@ services:
         sync: false
       # Per l'accesso con Google: lo stesso Client ID del frontend.
       - key: GOOGLE_CLIENT_ID
+        sync: false
+      # Per il collegamento Gmail (OAuth code flow).
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      # SMTP per le email di sistema (reset password): Gmail + app password.
+      - key: GMAIL_APP_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
         sync: false

@@ -16,7 +16,7 @@
 ## Indice
 
 - [Panoramica](#panoramica)
-- [Anteprima](#anteprima)
+- [Demo](#demo)
 - [Moduli](#moduli)
 - [Stack tecnologico](#stack-tecnologico)
 - [Architettura](#architettura)
@@ -97,13 +97,15 @@ crei un'opportunità nel CRM.
 ├── backend/               # Backend Node + Express
 │   └── src/
 │       ├── config/        # env (validazione zod), connessione DB
-│       ├── controllers/   # auth, crud, ai
+│       ├── controllers/   # auth, crud, ai, gmail, dashboard, inbox, notifiche
 │       ├── middleware/    # auth, rate limiting, gestione errori
-│       ├── models/        # User, Offerta, Opportunità, Approvazione
+│       ├── models/        # User, Offerta, Opportunità, Approvazione, RevokedToken, Contatore
 │       ├── routes/        # router REST sotto /api
 │       ├── services/      # logica di dominio + CRUD generico
 │       │   └── ai/        # layer di astrazione AI (vedi sotto)
-│       └── utils/         # firma token, CSRF
+│       └── utils/         # firma token, CSRF, cifratura, async handler
+├── scripts/               # Verifica e2e del prod, pulizia utenti di test
+├── .github/workflows/     # CI (build+lint+test → deploy Render) e keep-alive
 └── render.yaml            # Configurazione deploy backend (Render)
 ```
 
@@ -151,11 +153,15 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `CLIENT_URL`            | Backend  | Origini consentite dal CORS (separate da virgola). |
 | `MONGODB_URI`           | Backend  | Connessione MongoDB Atlas. Obbligatoria in produzione. |
 | `JWT_SECRET`            | Backend  | Segreto per la firma dei cookie di sessione. Obbligatorio in produzione. |
+| `VERCEL_PROJECT`        | Backend  | Slug Vercel: abilita le anteprime `<slug>*.vercel.app` nel CORS. |
 | `GOOGLE_CLIENT_ID`      | Backend  | Verifica del token Google (accesso opzionale). |
-| `GOOGLE_CLIENT_SECRET`  | Backend  | Credenziale Google. |
+| `GOOGLE_CLIENT_SECRET`  | Backend  | Credenziale Google (collegamento Gmail). |
+| `GMAIL_APP_USER`        | Backend  | Account Gmail per le email di sistema (reset password). |
+| `GMAIL_APP_PASSWORD`    | Backend  | App password Gmail per l'SMTP. |
 | `AI_PROVIDER`           | Backend  | Provider AI astratto: `default` (euristico) o `groq`. |
 | `AI_API_KEY`            | Backend  | Chiave del provider AI (mai esposta al client). |
 | `AI_MODEL`              | Backend  | Modello del provider AI (opzionale; per Groq default `llama-3.3-70b-versatile`). |
+| `VITE_PORT`             | Frontend | Porta del dev server (default `5173`). |
 | `VITE_API_URL`          | Frontend | URL dell'API in produzione. |
 | `VITE_API_PROXY`        | Frontend | Proxy dell'API in sviluppo. |
 | `VITE_GOOGLE_CLIENT_ID` | Frontend | Client ID Google per il pulsante di accesso. |
@@ -167,7 +173,9 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `npm run dev`       | Avvia client e server in parallelo. |
 | `npm run build`     | Build di produzione di client e server. |
 | `npm run lint`      | Lint su tutti i workspace. |
-| `npm run install:all` | Installa le dipendenze di tutti i workspace. |
+| `npm test`          | Test automatici del backend (`node:test`). |
+| `node scripts/verify-prod-e2e.mjs` | Verifica end-to-end dell'ambiente di produzione. |
+| `node scripts/cleanup-test-users.mjs [--apply]` | Rimuove gli utenti di test creati dalle verifiche. |
 
 ## Sicurezza
 

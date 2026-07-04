@@ -1,9 +1,9 @@
 # Revisione critica di sicurezza — Inbox AI
 
-> Revisione manuale del codice (il progetto non è ancora un repository Git, quindi non è
-> stata usata la review basata sul diff). Ambito: autenticazione, sessioni, CORS cross-site
-> Vercel ↔ Render, gestione dei segreti, validazione input, esposizione del sub-processor AI,
-> rate limiting e protezione dei dati (GDPR).
+> Revisione manuale del codice (repo pubblico su GitHub con CI: build, lint e test a ogni
+> push; deploy backend via hook solo a CI verde). Ambito: autenticazione, sessioni, CORS
+> cross-site Vercel ↔ Render, gestione dei segreti, validazione input, esposizione del
+> sub-processor AI, rate limiting e protezione dei dati (GDPR).
 >
 > Legenda severità: 🔴 Alta · 🟠 Media · 🟡 Bassa · ⚪ Informativa.
 
@@ -25,8 +25,9 @@ confinato lato server. I punti sotto sono miglioramenti, non difetti bloccanti �
 | 4  | 🟡 Bassa     | Fallback `jwtSecret` a stringa vuota in prod  | ✅ **Risolto** (2026-06-22) |
 | 5  | 🟡 Bassa     | Logout non revoca il JWT lato server          | ✅ **Risolto** (2026-06-22) |
 | 6  | 🟡 Bassa     | Token CSRF longevo (7g), non legato alla sessione | Accettabile |
-| 7  | ⚪ Info      | GDPR / dati a riposo (Gmail + sub-processor AI) | Futuro |
-| 8  | ⚪ Info      | Race su unicità email → 500 invece di 409      | Cosmetico |
+| 7  | 🟠 Media     | GDPR / dati a riposo (Gmail + sub-processor AI) | **Aperto** (attivo dal collegamento Gmail/LLM reale) |
+| 8  | ⚪ Info      | Race su unicità email → 500 invece di 409      | ✅ Risolto (E11000 → 409) |
+| 9  | 🟡 Bassa     | Sessioni valide dopo cambio/reset password     | ✅ Risolto (`passwordCambiataAl` + verifica `iat`) |
 
 ---
 
@@ -147,24 +148,37 @@ leggere il cookie né impostare l'header `X-CSRF-Token` cross-origin). Note: il 
 leggibile da JS (esposto in caso di XSS) e vive 7 giorni senza legame con la sessione.
 Accettabile; in caso di XSS l'intera sessione è comunque compromessa.
 
-## 7. ⚪ GDPR / dati a riposo (Gmail + sub-processor AI)
+## 7. 🟠 GDPR / dati a riposo (Gmail + sub-processor AI) — APERTO
 
-Allo stato attuale l'app verifica solo l'**ID token** Google e **non memorizza** access/refresh
-token Gmail né corpi email (il provider AI è euristico e locale). Il rischio "token Gmail a
-riposo" della checklist **non è ancora presente**. Quando si aggiungeranno la lettura Gmail e
-un LLM reale:
+**Stato attuale (aggiornato):** la lettura Gmail reale e l'LLM reale (Groq) **sono attivi**.
+L'app memorizza il refresh token Gmail e invia oggetto/corpo delle email al sub-processor AI
+per la classificazione.
 
-- cifrare a riposo i refresh token (non basta il default di Atlas) e ridurre gli scope OAuth;
-- DPA con il sub-processor AI; informativa privacy e base giuridica per l'analisi delle email;
-- minimizzazione/retention dei corpi email; possibilità di cancellazione (diritto all'oblio).
+Mitigazioni già in atto:
+- refresh token Gmail **cifrato a riposo** con AES-256-GCM (`utils/crypto.ts`);
+- scope OAuth minimi (`gmail.readonly` + `gmail.send`);
+- i corpi email **non vengono persistiti** (transitano solo per la classificazione, con
+  cache in memoria limitata);
+- output dell'LLM validato con zod; testo non fidato delimitato nel prompt.
 
-## 8. ⚪ Race condition sull'unicità dell'email
+Ancora da fare per la piena conformità:
+- cancellazione account self-service con erasure completo (diritto all'oblio);
+- informativa privacy con base giuridica e menzione del sub-processor AI (DPA);
+- policy di retention documentata.
 
-**File:** `backend/src/services/auth.service.ts:57,66`
+## 8. ⚪ Race condition sull'unicità dell'email — ✅ RISOLTO
 
-Tra il controllo `trovaPerEmail` e `User.create` due richieste concorrenti possono superare il
-check; l'indice `unique` su Mongo previene il duplicato ma l'errore emerge come `500` generico
-anziché `409`. Cosmetico: gestire l'errore duplicate-key (codice 11000) e restituire `409`.
+Tra il controllo `trovaPerEmail` e `User.create` due richieste concorrenti potevano superare
+il check. Ora l'errore duplicate-key (11000) viene intercettato e mappato su `409`
+(`auth.service.ts`). Inoltre gli errori async dei controller passano tutti dall'errorHandler
+tramite un wrapper (`utils/asyncHandler.ts`): nessun crash di processo su rejection.
+
+## 9. 🟡 Sessioni valide dopo cambio/reset password — ✅ RISOLTO
+
+I JWT emessi prima di un cambio/reset password ora vengono rifiutati: `User.passwordCambiataAl`
+viene confrontato con l'`iat` del token in `requireAuth` (cache in memoria con TTL 60s, un
+lookup per utente al minuto). Un reset password invalida quindi tutte le sessioni precedenti —
+esattamente lo scenario "password compromessa".
 
 ---
 
@@ -184,7 +198,7 @@ anziché `409`. Cosmetico: gestire l'errore duplicate-key (codice 11000) e resti
 
 ## Priorità d'intervento
 
-1. **Prima della produzione:** correggere il CORS (#1).
-2. **A breve:** mitigare l'enumerazione (#2) e irrobustire gli endpoint AI (#3) prima di
-   collegare un LLM reale.
-3. **Quando si abilita Gmail/LLM reale:** affrontare il blocco GDPR (#7).
+1. ~~**Prima della produzione:** correggere il CORS (#1).~~ ✅
+2. ~~**A breve:** mitigare l'enumerazione (#2) e irrobustire gli endpoint AI (#3).~~ ✅
+3. **Aperto:** blocco GDPR (#7) — cancellazione account, privacy policy, DPA. Gmail e LLM
+   reali sono attivi, quindi è l'unico punto sostanziale rimasto.

@@ -1,7 +1,9 @@
 name: Keep-alive
 
-# Mantiene "sveglio" il backend su Render free (che va in sleep dopo ~15 min di
-# inattività) pingando l'health check ogni ~10 minuti. Evita i cold start lenti.
+# Backup anti cold-start: ping dell'health check con cron ogni 5 minuti (GitHub
+# li esegue con ritardi anche di 20+ minuti, quindi NON è il meccanismo primario:
+# il backend si auto-pinga già tramite RENDER_EXTERNAL_URL, vedi index.ts).
+# NB: GitHub disattiva i workflow schedulati dopo 60 giorni senza attività nel repo.
 on:
   schedule:
     - cron: "*/5 * * * *"
