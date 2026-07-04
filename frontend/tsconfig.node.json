@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "composite": true,
+    // Emette FUORI dalla radice: un vite.config.js accanto a vite.config.ts
+    // verrebbe risolto da Vite al posto del .ts (config stantia silenziosa).
+    "outDir": "node_modules/.cache/tsconfig-node",
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",

@@ -1,11 +1,13 @@
-import { jsPDF } from "jspdf";
 import type { Offerta } from "@/hooks/useOfferte";
 
 const euro = (n: number) =>
   `${n.toLocaleString("it-IT", { minimumFractionDigits: 2 })} EUR`;
 
 /** Genera e scarica un PDF dell'offerta. */
-export function generaPdfOfferta(o: Offerta) {
+export async function generaPdfOfferta(o: Offerta) {
+  // Import dinamico: jsPDF (~150KB gzip) si scarica solo al primo PDF,
+  // non pesa sul caricamento della pagina Offerte.
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   const left = 20;
   let y = 24;
