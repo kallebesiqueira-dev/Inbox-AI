@@ -72,6 +72,24 @@ async function bearer(token: string, url: string) {
 }
 
 /**
+ * Revoca il grant OAuth presso Google (best effort). Serve a "resettare" il
+ * consenso: senza revoca, Google non mostra più la schermata di consenso e
+ * non fornisce un nuovo refresh token ai collegamenti successivi.
+ */
+async function revocaGrantGoogle(token: string): Promise<void> {
+  try {
+    await fetch("https://oauth2.googleapis.com/revoke", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: `token=${encodeURIComponent(token)}`,
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (err) {
+    console.warn("[Gmail] revoca del grant fallita (non bloccante):", err);
+  }
+}
+
+/**
  * Scambia il codice OAuth con i token e collega Gmail all'utente.
  * "riconsenso" = Google non ha fornito un refresh token e non ne abbiamo uno
  * salvato: serve ripetere il consenso (prompt=consent) lato client.
@@ -93,7 +111,13 @@ export async function connetti(
   // Il refresh token arriva solo al primo consenso: se assente, si mantiene quello esistente.
   if (!tokens.refresh_token) {
     const doc = await User.findById(userId).select("gmailToken");
-    if (!doc?.gmailToken) return "riconsenso";
+    if (!doc?.gmailToken) {
+      // Grant "orfano": Google considera il consenso già dato ma noi non
+      // abbiamo un refresh token. Si revoca il grant, così il PROSSIMO
+      // tentativo mostra di nuovo il consenso e fornisce il refresh token.
+      await revocaGrantGoogle(tokens.access_token);
+      return "riconsenso";
+    }
     await User.findByIdAndUpdate(userId, { gmailEmail: email });
     return { email };
   }
@@ -118,6 +142,12 @@ export async function stato(
 
 export async function disconnetti(userId: string): Promise<void> {
   if (!dbAttivo() || !mongoose.isValidObjectId(userId)) return;
+  // Revoca il grant presso Google PRIMA di dimenticare il token: così un
+  // futuro ricollegamento mostra di nuovo il consenso e ottiene un refresh
+  // token nuovo (senza revoca Google non lo fornirebbe più).
+  const doc = await User.findById(userId).select("gmailToken");
+  const refresh = doc?.gmailToken ? decifra(doc.gmailToken as string) : null;
+  if (refresh) await revocaGrantGoogle(refresh);
   await User.findByIdAndUpdate(userId, {
     $unset: { gmailToken: "", gmailEmail: "" },
   });

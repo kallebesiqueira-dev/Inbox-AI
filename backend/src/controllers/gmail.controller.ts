@@ -19,7 +19,7 @@ export async function connetti(req: Request, res: Response) {
     if (r === "riconsenso") {
       return res.status(409).json({
         messaggio:
-          "Google non ha fornito le credenziali complete. Scollega l'account Google dalle app autorizzate e riprova il collegamento.",
+          "Serve rinnovare il consenso Google: riprova il collegamento, questa volta Google chiederà di nuovo l'autorizzazione.",
       });
     }
     if (!r) return res.status(400).json({ messaggio: "Impossibile collegare Gmail." });
