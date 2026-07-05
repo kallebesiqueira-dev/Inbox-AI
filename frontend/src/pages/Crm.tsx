@@ -101,82 +101,96 @@ export function Crm() {
           {error instanceof Error ? error.message : "Errore di caricamento."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-5">
+        // Kanban: sotto xl le colonne scorrono in orizzontale (snap), da xl in
+        // su griglia a 5 colonne. Ogni colonna è un contenitore con sfondo,
+        // contatore e totale nel piede: le colonne vuote restano intenzionali.
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 xl:mx-0 xl:grid xl:grid-cols-5 xl:gap-4 xl:overflow-visible xl:px-0">
           {FASI_CRM.map((fase) => {
             const colonna = (data ?? []).filter((o) => o.fase === fase);
             const totale = colonna.reduce((s, o) => s + o.valore, 0);
             return (
-              <div key={fase} className="flex flex-col gap-3">
-                <div className="flex items-center justify-between px-1">
+              <div
+                key={fase}
+                className="flex w-[17rem] shrink-0 snap-start flex-col rounded-xl bg-surface/60 p-2 xl:w-auto"
+              >
+                <div className="flex items-center justify-between px-1.5 pb-2 pt-1">
                   <h2 className="text-sm font-semibold">{fase}</h2>
-                  <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-muted-foreground">
+                  <span className="rounded-full bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground shadow-soft">
                     {colonna.length}
                   </span>
                 </div>
-                <div className="flex flex-col gap-2">
-                  {colonna.map((o) => (
-                    <Card key={o.id} className="transition-shadow hover:shadow-card">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex min-w-0 items-center gap-2">
+                <div className="flex flex-1 flex-col gap-2">
+                  {colonna.length === 0 ? (
+                    <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground">
+                      Nessuna opportunità
+                    </div>
+                  ) : (
+                    colonna.map((o) => (
+                      <Card key={o.id} className="transition-shadow hover:shadow-card">
+                        <CardContent className="p-3">
+                          <div className="flex items-center gap-2">
                             <Avatar
                               src={o.avatar}
                               nome={o.cliente}
-                              className="size-9"
+                              className="size-8 text-xs"
                               onUpload={(dataUrl) =>
                                 aggiorna.mutate({ id: o.id, avatar: dataUrl })
                               }
                             />
                             <EditableText
                               valore={o.cliente}
+                              troncato
                               ariaLabel="Modifica cliente"
-                              className="min-w-0 font-medium"
+                              className="min-w-0 flex-1 text-sm font-medium"
                               onSalva={(v) => aggiorna.mutate({ id: o.id, cliente: v })}
                             />
+                            <button
+                              onClick={() =>
+                                elimina.mutate(o.id, {
+                                  onSuccess: () => toast("Spostato nel cestino."),
+                                })
+                              }
+                              aria-label={`Elimina ${o.cliente}`}
+                              className="shrink-0 text-muted-foreground transition-colors hover:text-destructive"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() =>
-                              elimina.mutate(o.id, {
-                                onSuccess: () => toast("Spostato nel cestino."),
-                              })
+                          <EditableText
+                            valore={o.valore}
+                            display={formatEuro(o.valore)}
+                            tipo="number"
+                            ariaLabel="Modifica valore"
+                            className="mt-2.5 text-sm font-semibold text-primary"
+                            onSalva={(v) =>
+                              aggiorna.mutate({ id: o.id, valore: Number(v) || 0 })
                             }
-                            aria-label={`Elimina ${o.cliente}`}
-                            className="shrink-0 text-muted-foreground hover:text-destructive"
+                          />
+                          <select
+                            value={o.fase}
+                            onChange={(e) =>
+                              aggiorna.mutate({ id: o.id, fase: e.target.value as FaseCrm })
+                            }
+                            aria-label={`Fase di ${o.cliente}`}
+                            className="mt-2.5 h-8 w-full cursor-pointer rounded-md border border-input bg-card px-2 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
-                            <Trash2 className="size-4" />
-                          </button>
-                        </div>
-                        <EditableText
-                          valore={o.valore}
-                          display={formatEuro(o.valore)}
-                          tipo="number"
-                          ariaLabel="Modifica valore"
-                          className="mt-2 text-sm text-primary"
-                          onSalva={(v) =>
-                            aggiorna.mutate({ id: o.id, valore: Number(v) || 0 })
-                          }
-                        />
-                        <select
-                          value={o.fase}
-                          onChange={(e) =>
-                            aggiorna.mutate({ id: o.id, fase: e.target.value as FaseCrm })
-                          }
-                          aria-label={`Fase di ${o.cliente}`}
-                          className="mt-2 w-full cursor-pointer rounded-md border border-input bg-card px-2 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          {FASI_CRM.map((f) => (
-                            <option key={f} value={f}>
-                              {f}
-                            </option>
-                          ))}
-                        </select>
-                      </CardContent>
-                    </Card>
-                  ))}
+                            {FASI_CRM.map((f) => (
+                              <option key={f} value={f}>
+                                {f}
+                              </option>
+                            ))}
+                          </select>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </div>
-                <p className="px-1 text-xs text-muted-foreground">
-                  Totale: {formatEuro(totale)}
-                </p>
+                <div className="mt-2 flex items-center justify-between border-t border-border/70 px-1.5 pt-2 text-xs">
+                  <span className="text-muted-foreground">Totale</span>
+                  <span className="font-semibold text-foreground">
+                    {formatEuro(totale)}
+                  </span>
+                </div>
               </div>
             );
           })}

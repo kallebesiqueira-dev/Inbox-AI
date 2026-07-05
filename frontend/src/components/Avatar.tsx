@@ -43,11 +43,12 @@ export function Avatar({
         className="size-full rounded-full object-cover"
       />
     ) : (
-      <span className="text-sm font-semibold">{iniziali(nome)}</span>
+      <span className="font-semibold">{iniziali(nome)}</span>
     );
 
+  // text-sm di default; sovrascrivibile dal chiamante (es. "text-xs" per avatar piccoli).
   const base = cn(
-    "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-primary-foreground",
+    "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm text-primary-foreground",
     className
   );
 

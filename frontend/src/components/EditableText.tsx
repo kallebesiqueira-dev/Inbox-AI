@@ -12,6 +12,8 @@ interface EditableTextProps {
   ariaLabel?: string;
   className?: string;
   inputClassName?: string;
+  /** Tronca il testo su una riga (ellissi) invece di andare a capo. */
+  troncato?: boolean;
 }
 
 /** Testo modificabile in linea: clic → input → Invio/blur salva, Esc annulla. */
@@ -23,6 +25,7 @@ export function EditableText({
   ariaLabel,
   className,
   inputClassName,
+  troncato,
 }: EditableTextProps) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(String(valore));
@@ -78,12 +81,14 @@ export function EditableText({
       type="button"
       onClick={() => setEditing(true)}
       aria-label={ariaLabel ?? "Modifica"}
+      title={troncato ? String(valore) : undefined}
       className={cn(
         "group inline-flex items-center gap-1.5 rounded text-left hover:text-primary",
+        troncato && "min-w-0 max-w-full",
         className
       )}
     >
-      <span>{display ?? valore}</span>
+      <span className={cn(troncato && "truncate")}>{display ?? valore}</span>
       <Pencil className="size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-60" />
     </button>
   );

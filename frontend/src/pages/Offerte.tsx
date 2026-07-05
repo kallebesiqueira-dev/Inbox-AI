@@ -118,7 +118,7 @@ export function Offerte() {
       )}
 
       <Card>
-        <CardContent className="overflow-x-auto p-0">
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 p-10 text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Caricamento offerte...
@@ -132,7 +132,90 @@ export function Offerte() {
               Nessuna offerta presente. Crea la prima con “Nuova offerta”.
             </div>
           ) : (
-            <table className="w-full min-w-[720px] text-sm">
+            <>
+              {/* Mobile: elenco a schede (la tabella resta per md+) */}
+              <div className="divide-y divide-border md:hidden">
+                {data.map((o) => (
+                  <div key={o.id} className="space-y-2.5 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="whitespace-nowrap text-sm font-semibold">
+                        #{o.numero}
+                      </span>
+                      <Badge variant={statoVariant[o.stato]}>{o.stato}</Badge>
+                    </div>
+                    <EditableText
+                      valore={o.cliente}
+                      troncato
+                      ariaLabel={`Modifica cliente offerta ${o.numero}`}
+                      className="text-sm"
+                      onSalva={(v) =>
+                        aggiorna.mutate({ id: o.id, patch: { cliente: v } })
+                      }
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <EditableText
+                        valore={o.importo}
+                        display={formatEuro(o.importo)}
+                        tipo="number"
+                        ariaLabel={`Modifica importo offerta ${o.numero}`}
+                        className="text-sm font-semibold text-primary"
+                        onSalva={(v) =>
+                          aggiorna.mutate({
+                            id: o.id,
+                            patch: { importo: Number(v) || 0 },
+                          })
+                        }
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {formatData(o.data)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <select
+                        value={o.stato}
+                        onChange={(e) =>
+                          aggiorna.mutate({
+                            id: o.id,
+                            patch: { stato: e.target.value as StatoOfferta },
+                          })
+                        }
+                        className="h-8 flex-1 cursor-pointer rounded-md border border-input bg-card px-2 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Stato offerta ${o.numero}`}
+                      >
+                        {STATI_OFFERTA.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Dettaglio offerta ${o.numero}`}
+                        onClick={() => setDettaglio(o)}
+                      >
+                        <FileText className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Elimina offerta ${o.numero}`}
+                        disabled={elimina.isPending}
+                        onClick={() =>
+                          elimina.mutate(o.id, {
+                            onSuccess: () => toast("Spostato nel cestino."),
+                          })
+                        }
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="p-4 font-medium">Numero</th>
@@ -149,7 +232,7 @@ export function Offerte() {
                     key={o.id}
                     className="border-b border-border last:border-0 hover:bg-surface"
                   >
-                    <td className="p-4 font-medium">#{o.numero}</td>
+                    <td className="whitespace-nowrap p-4 font-medium">#{o.numero}</td>
                     <td className="p-4">
                       <EditableText
                         valore={o.cliente}
@@ -222,7 +305,9 @@ export function Offerte() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -55,14 +55,16 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           <Menu className="size-5" />
         </Button>
 
-        {/* Ricerca → apre la command palette */}
+        {/* Ricerca → apre la command palette. La barra estesa richiede spazio
+            reale: sotto lg (dove convive con sidebar e identità utente) si
+            ripiega sull'icona, senza mai schiacciarsi o andare a capo. */}
         <button
           onClick={apri}
-          className="hidden flex-1 items-center gap-2 rounded-md bg-surface px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface/70 sm:flex sm:max-w-xs lg:max-w-md"
+          className="hidden min-w-0 flex-1 items-center gap-2 whitespace-nowrap rounded-md bg-surface px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface/70 lg:flex lg:max-w-md"
         >
           <Search className="size-4 shrink-0" />
-          <span className="flex-1 text-left">Cerca pagine e azioni…</span>
-          <kbd className="rounded border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium">
+          <span className="flex-1 truncate text-left">Cerca pagine e azioni…</span>
+          <kbd className="shrink-0 rounded border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium">
             {isMac ? "⌘" : "Ctrl"} K
           </kbd>
         </button>
@@ -72,7 +74,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="sm:hidden"
+          className="lg:hidden"
           aria-label="Cerca"
           onClick={apri}
         >
@@ -87,7 +89,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             onClick={() => setMenuAperto((a) => !a)}
             className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-surface"
           >
-            <div className="hidden text-right sm:block">
+            <div className="hidden text-right lg:block">
               <p className="text-sm font-medium leading-tight">
                 {utente?.nome ?? "Account"}
               </p>
@@ -96,12 +98,12 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
               </p>
             </div>
             <Avatar src={utente?.avatar} nome={utente?.nome} className="size-9" />
-            <ChevronDown className="hidden size-4 text-muted-foreground sm:block" />
+            <ChevronDown className="hidden size-4 text-muted-foreground lg:block" />
           </button>
 
           {menuAperto && (
             <div className="absolute right-0 z-40 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-card">
-              <div className="border-b border-border px-4 py-3 sm:hidden">
+              <div className="border-b border-border px-4 py-3 lg:hidden">
                 <p className="text-sm font-medium">{utente?.nome ?? "Account"}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {utente?.email}
