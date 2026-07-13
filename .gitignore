@@ -28,3 +28,7 @@ Thumbs.db
 coverage/
 .vercel
 .hintrc
+
+# Artefatti locali degli script (screenshot/video di verifica)
+scripts/shots/
+scripts/video/

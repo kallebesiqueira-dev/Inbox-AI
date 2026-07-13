@@ -49,8 +49,15 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 
 ![Inbox AI in azione](docs/walkthrough.gif)
 
-> Dalla landing alla **generazione di un'offerta con l'AI**, all'**assistente in
-> streaming**, al **CRM** e alla **ricerca rapida** (⌘K).
+> Dalla landing all'accesso, alla **dashboard direzionale** con KPI e grafici in tempo
+> reale, al **CRM**, alle **offerte** e all'**assistente AI in streaming**.
+
+### Dashboard direzionale
+
+KPI, andamento mensile, pipeline per fase (donut), quote per stato e **valore della
+pipeline a cascata** — tutto calcolato sui dati reali dell'utente.
+
+![Dashboard](docs/screenshots/dashboard.png)
 
 ### Automazione AI — analizza l'email, genera l'offerta, crea l'opportunità
 
@@ -63,7 +70,7 @@ crei un'opportunità nel CRM.
 
 | Modulo           | Descrizione |
 |------------------|-------------|
-| **Dashboard**    | KPI operativi (email elaborate, offerte generate, opportunità aperte, tempo risparmiato) e attività recenti. |
+| **Dashboard**    | Report direzionale sui dati reali: 5 KPI con variazione mensile, andamento mensile (ore risparmiate e offerte), pipeline per fase, offerte per stato e valore pipeline a cascata. |
 | **Assistente**   | Widget di chat AI flottante (in streaming), disponibile su ogni pagina, per gestire email, offerte, opportunità e approvazioni. |
 | **Inbox**        | Email ricevute, classificate per categoria/priorità; apri un'email per **analizzarla con l'AI**, **generare un'offerta** o **creare un'opportunità** nel CRM. |
 | **Offerte**      | Generazione assistita dall'**AI** ("Genera con AI"), **modifica in linea** e versioning dei documenti commerciali (Bozza → In revisione → Approvata → Inviata). |

@@ -22,6 +22,8 @@ export interface ApprovazioneDTO {
   oggetto: string;
   fase: FaseApprovazione;
   richiedente: string;
+  /** Data di creazione (ISO) — usata dalla dashboard per le serie mensili. */
+  data: string;
 }
 
 export const approvazioneCrud = creaCrud<ApprovazioneInput, ApprovazioneDTO>({
@@ -32,6 +34,9 @@ export const approvazioneCrud = creaCrud<ApprovazioneInput, ApprovazioneDTO>({
     oggetto: d.oggetto,
     fase: d.fase as FaseApprovazione,
     richiedente: d.richiedente ?? "Sistema AI",
+    data: (
+      (d as unknown as { createdAt?: Date }).createdAt ?? new Date()
+    ).toISOString(),
   }),
   demo: (input, id) => ({
     id,
@@ -39,5 +44,6 @@ export const approvazioneCrud = creaCrud<ApprovazioneInput, ApprovazioneDTO>({
     oggetto: input.oggetto,
     fase: input.fase ?? "Revisione",
     richiedente: input.richiedente ?? "Sistema AI",
+    data: new Date().toISOString(),
   }),
 });

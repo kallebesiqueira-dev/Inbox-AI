@@ -6,14 +6,37 @@ export interface Metrica {
   delta: number;
 }
 
+export interface PuntoAndamento {
+  mese: string;
+  offerte: number;
+  elementi: number;
+  ore: number;
+}
+
+export interface FasePipeline {
+  fase: string;
+  quantita: number;
+  valore: number;
+}
+
+export interface StatoOfferte {
+  stato: string;
+  quantita: number;
+  importo: number;
+}
+
 export interface DashboardData {
+  anno: number;
   metriche: {
     emailElaborate: Metrica;
     offerteGenerate: Metrica;
     opportunitaAperte: Metrica;
+    valorePipeline: Metrica;
     oreRisparmiate: Metrica;
   };
-  oreMensili: { mese: string; valore: number }[];
+  andamento: PuntoAndamento[];
+  pipeline: FasePipeline[];
+  offertePerStato: StatoOfferte[];
   attivita: { testo: string; tempo: string }[];
 }
 

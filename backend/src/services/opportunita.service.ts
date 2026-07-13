@@ -17,6 +17,8 @@ export interface OpportunitaDTO {
   valore: number;
   fase: FaseCrm;
   avatar?: string;
+  /** Data di creazione (ISO) — usata dalla dashboard per le serie mensili. */
+  data: string;
 }
 
 export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
@@ -27,6 +29,9 @@ export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
     valore: d.valore,
     fase: d.fase as FaseCrm,
     avatar: (d.avatar as string | undefined) ?? undefined,
+    data: (
+      (d as unknown as { createdAt?: Date }).createdAt ?? new Date()
+    ).toISOString(),
   }),
   demo: (input, id) => ({
     id,
@@ -34,5 +39,6 @@ export const opportunitaCrud = creaCrud<OpportunitaInput, OpportunitaDTO>({
     valore: input.valore,
     fase: input.fase ?? "Nuovo",
     avatar: input.avatar,
+    data: new Date().toISOString(),
   }),
 });

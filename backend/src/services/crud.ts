@@ -9,6 +9,12 @@ export interface OpzioniElenco {
   /** Numero massimo di elementi (i più recenti). */
   limite?: number;
   filtro?: Filtro;
+  /**
+   * Proiezione: carica solo questi campi dal DB (es. dashboard, che aggrega
+   * migliaia di documenti e non deve trascinarsi avatar/corpo in memoria).
+   * In modalità demo viene ignorata (i DTO sono già in memoria).
+   */
+  campi?: string[];
 }
 
 export interface Crud<TDTO, TInput> {
@@ -76,6 +82,7 @@ export function creaCrud<
       let query = model
         .find({ userId, deletedAt: null, ...(opzioni?.filtro ?? {}) })
         .sort({ createdAt: -1 });
+      if (opzioni?.campi) query = query.select(opzioni.campi.join(" "));
       if (opzioni?.limite) query = query.limit(opzioni.limite);
       const docs = await query;
       return docs.map(opts.toDTO);

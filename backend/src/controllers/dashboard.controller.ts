@@ -1,15 +1,29 @@
 import type { Request, Response } from "express";
-import { offerteCrud } from "../services/offerte.service.js";
-import { opportunitaCrud } from "../services/opportunita.service.js";
-import { approvazioneCrud } from "../services/approvazione.service.js";
+import { offerteCrud, type OffertaDTO } from "../services/offerte.service.js";
+import {
+  opportunitaCrud,
+  type OpportunitaDTO,
+} from "../services/opportunita.service.js";
+import {
+  approvazioneCrud,
+  type ApprovazioneDTO,
+} from "../services/approvazione.service.js";
+import { FASI_CRM } from "../models/Opportunita.js";
+import { STATI_OFFERTA } from "../models/Offerta.js";
 
 const MESI = [
   "Gen", "Feb", "Mar", "Apr", "Mag", "Giu",
   "Lug", "Ago", "Set", "Ott", "Nov", "Dic",
 ];
-// Andamento normalizzato: la curva viene scalata sulle ore risparmiate correnti,
-// così il grafico riflette il volume reale di attività dell'utente.
-const CURVA = [0.28, 0.34, 0.31, 0.45, 0.42, 0.55, 0.6, 0.52, 0.68, 0.78, 0.88, 1];
+
+// Stima ore risparmiate per elemento gestito dall'AI (offerta, opp., approv.).
+const ORE_OFFERTA = 1.5;
+const ORE_OPPORTUNITA = 0.8;
+const ORE_APPROVAZIONE = 0.5;
+
+// Limite prudenziale: la dashboard aggrega i documenti dell'utente in memoria
+// (proiettati sui soli campi utili), non intere collezioni illimitate.
+const LIMITE = 1000;
 
 function tempoRelativo(iso?: string): string {
   if (!iso) return "di recente";
@@ -20,32 +34,99 @@ function tempoRelativo(iso?: string): string {
   return `${giorni} giorni fa`;
 }
 
+/** Indice del mese (0-11) se la data ISO cade nell'anno corrente, altrimenti -1. */
+function meseCorrente(iso: string, anno: number): number {
+  const d = new Date(iso);
+  return d.getFullYear() === anno ? d.getMonth() : -1;
+}
+
+/** Variazione % mese corrente vs mese precedente, sui valori reali. */
+function deltaMensile(serie: number[], mese: number): number {
+  const corrente = serie[mese] ?? 0;
+  const precedente = mese > 0 ? serie[mese - 1] : 0;
+  if (precedente === 0) return corrente > 0 ? 100 : 0;
+  return Math.round(((corrente - precedente) / precedente) * 100);
+}
+
 export async function kpi(req: Request, res: Response) {
   const userId = req.userId ?? "";
-  // Conteggi in DB + solo i pochi elementi recenti per il feed attività:
-  // niente caricamento di intere collezioni per fare .length.
-  const [
-    offerteGenerate,
-    opportunitaTotali,
-    opportunitaAperte,
-    approvazioniTotali,
-    offerte,
-    opportunita,
-    approvazioni,
-  ] = await Promise.all([
-    offerteCrud.conta(userId),
-    opportunitaCrud.conta(userId),
-    opportunitaCrud.conta(userId, { fase: { $ne: "Chiuso" } }),
-    approvazioneCrud.conta(userId),
-    offerteCrud.elenca(userId, { limite: 2 }),
-    opportunitaCrud.elenca(userId, { limite: 1 }),
-    approvazioneCrud.elenca(userId, { limite: 1 }),
+  // Proiezioni: niente avatar (data URL fino a 500KB) né corpo/voci in memoria.
+  const [offerte, opportunita, approvazioni] = await Promise.all([
+    offerteCrud.elenca(userId, {
+      limite: LIMITE,
+      campi: ["numero", "cliente", "importo", "stato", "data", "createdAt"],
+    }),
+    opportunitaCrud.elenca(userId, {
+      limite: LIMITE,
+      campi: ["cliente", "valore", "fase", "createdAt"],
+    }),
+    approvazioneCrud.elenca(userId, {
+      limite: LIMITE,
+      campi: ["tipo", "oggetto", "fase", "createdAt"],
+    }),
   ]);
 
-  // Metriche calcolate sui dati reali dell'utente.
-  const emailElaborate = offerteGenerate + opportunitaTotali + approvazioniTotali;
+  const anno = new Date().getFullYear();
+  const meseOggi = new Date().getMonth();
+
+  // Serie mensili reali (anno corrente) dalle date di creazione.
+  const offerteMese = Array.from({ length: 12 }, () => 0);
+  const opportunitaMese = Array.from({ length: 12 }, () => 0);
+  const elementiMese = Array.from({ length: 12 }, () => 0);
+  const oreMese = Array.from({ length: 12 }, () => 0);
+  const pipelineMese = Array.from({ length: 12 }, () => 0);
+
+  for (const o of offerte) {
+    const m = meseCorrente(o.data, anno);
+    if (m < 0) continue;
+    offerteMese[m] += 1;
+    elementiMese[m] += 1;
+    oreMese[m] += ORE_OFFERTA;
+  }
+  for (const o of opportunita) {
+    const m = meseCorrente(o.data, anno);
+    if (m < 0) continue;
+    opportunitaMese[m] += 1;
+    elementiMese[m] += 1;
+    oreMese[m] += ORE_OPPORTUNITA;
+    pipelineMese[m] += o.valore;
+  }
+  for (const a of approvazioni) {
+    const m = meseCorrente(a.data, anno);
+    if (m < 0) continue;
+    elementiMese[m] += 1;
+    oreMese[m] += ORE_APPROVAZIONE;
+  }
+
+  // Distribuzioni reali per il donut / barre / cascata.
+  const pipeline = FASI_CRM.map((fase) => {
+    const inFase = opportunita.filter((o: OpportunitaDTO) => o.fase === fase);
+    return {
+      fase,
+      quantita: inFase.length,
+      valore: inFase.reduce((somma, o) => somma + o.valore, 0),
+    };
+  });
+  const offertePerStato = STATI_OFFERTA.map((stato) => {
+    const inStato = offerte.filter((o: OffertaDTO) => o.stato === stato);
+    return {
+      stato,
+      quantita: inStato.length,
+      importo: inStato.reduce((somma, o) => somma + o.importo, 0),
+    };
+  });
+
+  const opportunitaAperte = opportunita.filter((o) => o.fase !== "Chiuso");
+  const valorePipeline = opportunitaAperte.reduce(
+    (somma, o) => somma + o.valore,
+    0
+  );
+  const emailElaborate =
+    offerte.length + opportunita.length + approvazioni.length;
   const oreRisparmiate = Math.round(
-    offerteGenerate * 1.5 + opportunitaTotali * 0.8 + approvazioniTotali * 0.5
+    offerte.length * ORE_OFFERTA +
+      opportunita.length * ORE_OPPORTUNITA +
+      approvazioni.length * ORE_APPROVAZIONE
   );
 
   const attivita: { testo: string; tempo: string }[] = [];
@@ -55,15 +136,17 @@ export async function kpi(req: Request, res: Response) {
       tempo: tempoRelativo(o.data),
     });
   }
-  if (opportunita[0]) {
+  const opp = opportunita[0] as OpportunitaDTO | undefined;
+  if (opp) {
     attivita.push({
-      testo: `Opportunità: ${opportunita[0].cliente} in ${opportunita[0].fase}`,
-      tempo: "di recente",
+      testo: `Opportunità: ${opp.cliente} in ${opp.fase}`,
+      tempo: tempoRelativo(opp.data),
     });
   }
-  if (approvazioni[0]) {
+  const appr = approvazioni[0] as ApprovazioneDTO | undefined;
+  if (appr) {
     attivita.push({
-      testo: `Approvazione: ${approvazioni[0].oggetto}`,
+      testo: `Approvazione: ${appr.oggetto}`,
       tempo: "in attesa",
     });
   }
@@ -74,17 +157,43 @@ export async function kpi(req: Request, res: Response) {
     });
   }
 
+  const andamento = MESI.map((mese, i) => ({
+    mese,
+    offerte: offerteMese[i],
+    elementi: elementiMese[i],
+    ore: Math.round(oreMese[i] * 10) / 10,
+  }));
+
   res.json({
+    anno,
     metriche: {
-      emailElaborate: { valore: emailElaborate, delta: 12 },
-      offerteGenerate: { valore: offerteGenerate, delta: 8 },
-      opportunitaAperte: { valore: opportunitaAperte, delta: 5 },
-      oreRisparmiate: { valore: oreRisparmiate, delta: 18 },
+      emailElaborate: {
+        valore: emailElaborate,
+        delta: deltaMensile(elementiMese, meseOggi),
+      },
+      offerteGenerate: {
+        valore: offerte.length,
+        delta: deltaMensile(offerteMese, meseOggi),
+      },
+      opportunitaAperte: {
+        valore: opportunitaAperte.length,
+        delta: deltaMensile(opportunitaMese, meseOggi),
+      },
+      valorePipeline: {
+        valore: valorePipeline,
+        delta: deltaMensile(pipelineMese, meseOggi),
+      },
+      oreRisparmiate: {
+        valore: oreRisparmiate,
+        delta: deltaMensile(oreMese, meseOggi),
+      },
     },
-    oreMensili: MESI.map((mese, i) => ({
-      mese,
-      valore: Math.round(CURVA[i] * oreRisparmiate),
-    })),
+    andamento,
+    pipeline,
+    offertePerStato,
+    // Campo legacy: mantiene compatibile il frontend già deployato mentre
+    // backend e frontend si aggiornano in momenti diversi (Vercel vs Render).
+    oreMensili: andamento.map(({ mese, ore }) => ({ mese, valore: ore })),
     attivita,
   });
 }
