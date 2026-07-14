@@ -274,8 +274,24 @@ if ((await anni.count()) > 1) {
 }
 await muovi("text=Andamento mensile");
 await attesa(600);
-await muovi("text=Pipeline per fase");
-await attesa(800);
+// Donut: passaggio del mouse sui segmenti (il centro mostra la fase).
+const svgDonut = page.locator("svg[aria-label^='Pipeline:']");
+const areaDonut = await svgDonut.boundingBox();
+if (areaDonut) {
+  const cx = areaDonut.x + areaDonut.width / 2;
+  const cy = areaDonut.y + areaDonut.height / 2;
+  const raggio = (areaDonut.width * 52) / 144;
+  for (const angolo of [-1.1, 0.2, 1.4, 2.6]) {
+    await page.mouse.move(
+      cx + raggio * Math.cos(angolo),
+      cy + raggio * Math.sin(angolo),
+      { steps: 20 }
+    );
+    await attesa(850);
+  }
+}
+await muovi("text=Offerte per stato");
+await attesa(600);
 await page.mouse.wheel(0, 520);
 await attesa(1500);
 await muovi("text=Risultato commerciale");

@@ -166,24 +166,24 @@ function Contenuto({ data }: { data: DashboardData }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-semibold">
               Pipeline per fase
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 items-center justify-center">
             <GraficoDonut dati={data.pipeline} />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader className="pb-4">
             <CardTitle className="text-sm font-semibold">
               Offerte per stato
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col justify-center">
             <BarrePercentuali dati={data.offertePerStato} />
           </CardContent>
         </Card>
