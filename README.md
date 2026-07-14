@@ -19,7 +19,7 @@
 - [Demo](#demo)
 - [Moduli](#moduli)
 - [Stack tecnologico](#stack-tecnologico)
-- [Architettura](#architettura)
+- [Architettura](#architettura) · [Diagrammi UML](docs/ARCHITECTURE.md)
 - [Astrazione AI](#astrazione-ai)
 - [Avvio rapido](#avvio-rapido)
 - [Variabili dambiente](#variabili-dambiente)
@@ -92,11 +92,15 @@ crei un'opportunità nel CRM.
 
 ## Architettura
 
+> 📐 **Diagrammi UML completi** — componenti e deploy, classi del dominio, ER,
+> sequenze (automazione AI, autenticazione) e cicli di vita — in
+> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ```
 .
 ├── frontend/              # Frontend React + Vite
 │   ├── src/
-│   │   ├── components/     # UI, layout, guardie di rotta
+│   │   ├── components/     # UI, layout, grafici dashboard (SVG), guardie di rotta
 │   │   ├── hooks/          # Hook TanStack Query (offerte, opportunità, approvazioni, auth)
 │   │   ├── lib/            # Client API (fetch + cookie + CSRF)
 │   │   ├── pages/          # Dashboard, Inbox, Offerte, CRM, Approvazioni, Cestino, Impostazioni, Login
@@ -184,6 +188,7 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `npm test`          | Test automatici del backend (`node:test`). |
 | `node scripts/verify-prod-e2e.mjs` | Verifica end-to-end dell'ambiente di produzione. |
 | `node scripts/cleanup-test-users.mjs [--apply]` | Rimuove gli utenti di test creati dalle verifiche. |
+| `node scripts/record-demo.mjs` | Registra il video walkthrough del README (webm → GIF). |
 
 ## Sicurezza
 
