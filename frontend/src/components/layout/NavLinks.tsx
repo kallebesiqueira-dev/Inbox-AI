@@ -23,9 +23,11 @@ export function NavLinks({ onNavigate, collapsed }: NavLinksProps) {
             cn(
               "flex items-center rounded-md py-2 text-sm font-medium transition-colors",
               collapsed ? "justify-center px-0" : "gap-3 px-3",
+              // Su fondo scuro la voce attiva è una "pillola" chiara (icona nel
+              // colore primario), come nei report direzionali.
               isActive
-                ? "bg-primary text-primary-foreground shadow-soft"
-                : "text-foreground/70 hover:bg-background hover:text-foreground"
+                ? "bg-background text-primary shadow-soft"
+                : "text-primary-foreground/70 hover:bg-white/10 hover:text-primary-foreground"
             )
           }
         >

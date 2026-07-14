@@ -40,18 +40,18 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
         aria-modal="true"
         aria-label="Menu di navigazione"
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[80%] flex-col bg-surface shadow-card transition-transform duration-200 ease-out",
+          "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[80%] flex-col bg-primary text-primary-foreground shadow-card transition-transform duration-200 ease-out",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b border-border px-4">
-          <div className="flex items-center">
-            <img src="/logo.jpeg" alt="Inbox AI" className="h-9 w-auto rounded" />
-          </div>
+        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+          <span className="rounded-md bg-white p-1">
+            <img src="/logo.jpeg" alt="Inbox AI" className="h-8 w-auto rounded-sm" />
+          </span>
           <button
             onClick={onClose}
             aria-label="Chiudi menu"
-            className="flex size-9 items-center justify-center rounded-md text-foreground/70 hover:bg-background"
+            className="flex size-9 items-center justify-center rounded-md text-primary-foreground/70 hover:bg-white/10 hover:text-primary-foreground"
           >
             <X className="size-5" />
           </button>
@@ -59,7 +59,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
 
         <NavLinks onNavigate={onClose} />
 
-        <div className="border-t border-border p-4 text-xs text-muted-foreground">
+        <div className="border-t border-white/10 p-4 text-xs text-primary-foreground/60">
           Automazione operativa e commerciale
         </div>
       </div>

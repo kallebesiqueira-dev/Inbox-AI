@@ -27,6 +27,8 @@ export interface StatoOfferte {
 
 export interface DashboardData {
   anno: number;
+  /** Anni con dati (max 5), per i pulsanti di periodo. */
+  anni: number[];
   metriche: {
     emailElaborate: Metrica;
     offerteGenerate: Metrica;
@@ -37,14 +39,21 @@ export interface DashboardData {
   andamento: PuntoAndamento[];
   pipeline: FasePipeline[];
   offertePerStato: StatoOfferte[];
+  /** Valore delle opportunità create in ciascun mese (grafico a cascata). */
+  valoriMensili: { mese: string; valore: number }[];
   attivita: { testo: string; tempo: string }[];
 }
 
-export function useDashboard() {
+export function useDashboard(anno?: number) {
   return useQuery({
-    queryKey: ["dashboard", "kpi"],
-    queryFn: () => apiFetch<DashboardData>("/dashboard/kpi"),
+    queryKey: ["dashboard", "kpi", anno ?? "corrente"],
+    queryFn: () =>
+      apiFetch<DashboardData>(
+        anno ? `/dashboard/kpi?anno=${anno}` : "/dashboard/kpi"
+      ),
     // Evita di rifare la richiesta a ogni ritorno sulla dashboard.
     staleTime: 60_000,
+    // Durante il cambio anno mantiene i dati precedenti (niente flash di spinner).
+    placeholderData: (prev) => prev,
   });
 }

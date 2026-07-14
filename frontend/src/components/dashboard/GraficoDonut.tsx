@@ -79,6 +79,9 @@ export function GraficoDonut({ dati }: { dati: FasePipeline[] }) {
               {f.fase}
             </span>
             <span className="font-medium tabular-nums">{f.quantita}</span>
+            <span className="w-11 text-right text-xs tabular-nums text-muted-foreground">
+              {totale > 0 ? `${Math.round((f.quantita / totale) * 100)}%` : "—"}
+            </span>
           </li>
         ))}
       </ul>

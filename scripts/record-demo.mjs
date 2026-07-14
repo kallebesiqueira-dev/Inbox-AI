@@ -1,7 +1,13 @@
 // Registra il walkthrough per il README (webm), da convertire in GIF con ffmpeg.
 // Uso: node scripts/record-demo.mjs
 import { chromium } from "playwright";
+import mongoose from "mongoose";
+import { config } from "dotenv";
+import { fileURLToPath } from "url";
+import path from "path";
 import fs from "fs";
+
+config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.env") });
 
 const BASE = "http://localhost:5173";
 const DIR = "scripts/video";
@@ -42,17 +48,51 @@ const PASSWORD = "Password123!";
       },
       { path, body, csrf }
     );
-  await post("/crm", { cliente: "Rossi S.p.A.", valore: 12400, fase: "In Analisi" });
-  await post("/crm", { cliente: "Bianchi Costruzioni", valore: 8750, fase: "Negoziazione" });
-  await post("/crm", { cliente: "Studio Ferrari", valore: 5600, fase: "Chiuso" });
-  await post("/crm", { cliente: "Gallo Sports", valore: 15000, fase: "Offerta Inviata" });
-  await post("/crm", { cliente: "Tecno Impianti SRL", valore: 9800, fase: "Nuovo" });
-  await post("/crm", { cliente: "Verdi Logistica", valore: 6200, fase: "In Analisi" });
-  await post("/offerte", { cliente: "Gallo Sports", importo: 15000, stato: "Inviata" });
-  await post("/offerte", { cliente: "Rossi S.p.A.", importo: 12400, stato: "Approvata" });
-  await post("/offerte", { cliente: "Bianchi Costruzioni", importo: 8750, stato: "In revisione" });
-  await post("/offerte", { cliente: "Verdi Logistica", importo: 6200, stato: "Inviata" });
+  const OPP = [
+    ["Rossi S.p.A.", 12400, "In Analisi"],
+    ["Bianchi Costruzioni", 8750, "Negoziazione"],
+    ["Studio Ferrari", 5600, "Chiuso"],
+    ["Gallo Sports", 15000, "Offerta Inviata"],
+    ["Tecno Impianti SRL", 9800, "Nuovo"],
+    ["Verdi Logistica", 6200, "In Analisi"],
+    ["Delta Arredamenti", 4300, "Nuovo"],
+    ["Omega Consulting", 11200, "Negoziazione"],
+    ["Marchetti & Figli", 7400, "Offerta Inviata"],
+    ["Aurora Impianti", 5100, "Chiuso"],
+  ];
+  for (const [cliente, valore, fase] of OPP) await post("/crm", { cliente, valore, fase });
+  const OFF = [
+    ["Gallo Sports", 15000, "Inviata"],
+    ["Rossi S.p.A.", 12400, "Approvata"],
+    ["Bianchi Costruzioni", 8750, "In revisione"],
+    ["Tecno Impianti SRL", 9800, "Bozza"],
+    ["Verdi Logistica", 6200, "Inviata"],
+    ["Omega Consulting", 11200, "Approvata"],
+  ];
+  for (const [cliente, importo, stato] of OFF) await post("/offerte", { cliente, importo, stato });
   await b.close();
+
+  // Retrodata i documenti su più mesi (Gen–Lug + 2 opportunità nell'anno prima):
+  // così andamento, cascata e selettore anno mostrano dati distribuiti.
+  await mongoose.connect(process.env.MONGODB_URI);
+  const db = mongoose.connection;
+  const utente = await db.collection("users").findOne({ email: EMAIL });
+  const uid = utente._id.toString();
+  const annoCorrente = new Date().getFullYear();
+  const dataMese = (anno, mese, giorno = 12) => new Date(Date.UTC(anno, mese, giorno, 10));
+  for (const col of ["opportunitas", "offertas", "approvaziones"]) {
+    const docs = await db.collection(col).find({ userId: uid }).sort({ createdAt: 1 }).toArray();
+    for (let i = 0; i < docs.length; i++) {
+      const nelPrecedente = i < 2 && col === "opportunitas";
+      const quando = nelPrecedente
+        ? dataMese(annoCorrente - 1, 9 + i)
+        : dataMese(annoCorrente, (i * 5) % 7, 3 + i * 2);
+      const set = { createdAt: quando, updatedAt: quando };
+      if (col === "offertas") set.data = quando;
+      await db.collection(col).updateOne({ _id: docs[i]._id }, { $set: set });
+    }
+  }
+  await mongoose.disconnect();
   console.log("dati pronti per", EMAIL);
 }
 
@@ -158,20 +198,30 @@ await page.waitForURL("**/app");
 await page.waitForSelector("text=Valore pipeline", { timeout: 20000 });
 await attesa(1500);
 
-// 3) Dashboard: hover sui KPI e sui grafici.
+// 3) Dashboard: hover sui KPI, cambio anno reale, grafici e cascata.
 await muovi("text=Email elaborate");
 await attesa(500);
 await muovi("text=Valore pipeline", { fy: 0.4 });
 await attesa(700);
+const anni = page.locator("[role='group'][aria-label='Seleziona anno'] button");
+if ((await anni.count()) > 1) {
+  await clicca("[role='group'][aria-label='Seleziona anno'] button");
+  await attesa(1300);
+  const corrente = anni.last();
+  const box = await corrente.boundingBox();
+  if (box) await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 20 });
+  await corrente.click();
+  await attesa(1100);
+}
 await muovi("text=Andamento mensile");
-await attesa(500);
+await attesa(600);
 await muovi("text=Pipeline per fase");
 await attesa(800);
-await page.mouse.wheel(0, 450);
-await attesa(1400);
-await muovi("text=Valore pipeline per fase");
-await attesa(1000);
-await page.mouse.wheel(0, -450);
+await page.mouse.wheel(0, 520);
+await attesa(1500);
+await muovi("text=Risultato commerciale");
+await attesa(1100);
+await page.mouse.wheel(0, -520);
 await attesa(800);
 
 // 4) CRM kanban.

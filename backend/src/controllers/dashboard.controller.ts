@@ -34,10 +34,17 @@ function tempoRelativo(iso?: string): string {
   return `${giorni} giorni fa`;
 }
 
-/** Indice del mese (0-11) se la data ISO cade nell'anno corrente, altrimenti -1. */
+/** Indice del mese (0-11) se la data ISO cade nell'anno indicato, altrimenti -1. */
 function meseCorrente(iso: string, anno: number): number {
   const d = new Date(iso);
   return d.getFullYear() === anno ? d.getMonth() : -1;
+}
+
+/** Anno richiesto via query (?anno=2026), limitato a un intervallo sensato. */
+function annoRichiesto(query: unknown): number | null {
+  const n = Number(query);
+  if (!Number.isInteger(n) || n < 2000 || n > 2100) return null;
+  return n;
 }
 
 /** Variazione % mese corrente vs mese precedente, sui valori reali. */
@@ -66,8 +73,20 @@ export async function kpi(req: Request, res: Response) {
     }),
   ]);
 
-  const anno = new Date().getFullYear();
-  const meseOggi = new Date().getMonth();
+  const annoCorrente = new Date().getFullYear();
+  const anno = annoRichiesto(req.query.anno) ?? annoCorrente;
+  // Nell'anno corrente il delta si calcola sul mese di oggi; per gli anni
+  // passati sull'ultimo mese (dicembre).
+  const meseOggi = anno === annoCorrente ? new Date().getMonth() : 11;
+
+  // Anni con almeno un dato (per i pulsanti di periodo), sempre incluso il corrente.
+  const anni = new Set<number>([annoCorrente]);
+  for (const lista of [offerte, opportunita, approvazioni]) {
+    for (const el of lista as { data: string }[]) {
+      const a = new Date(el.data).getFullYear();
+      if (a >= 2000 && a <= 2100) anni.add(a);
+    }
+  }
 
   // Serie mensili reali (anno corrente) dalle date di creazione.
   const offerteMese = Array.from({ length: 12 }, () => 0);
@@ -98,9 +117,15 @@ export async function kpi(req: Request, res: Response) {
     oreMese[m] += ORE_APPROVAZIONE;
   }
 
+  // Tutte le metriche e le distribuzioni sono riferite all'anno selezionato.
+  const nellAnno = (iso: string) => new Date(iso).getFullYear() === anno;
+  const offerteAnno = offerte.filter((o) => nellAnno(o.data));
+  const opportunitaAnno = opportunita.filter((o) => nellAnno(o.data));
+  const approvazioniAnno = approvazioni.filter((a) => nellAnno(a.data));
+
   // Distribuzioni reali per il donut / barre / cascata.
   const pipeline = FASI_CRM.map((fase) => {
-    const inFase = opportunita.filter((o: OpportunitaDTO) => o.fase === fase);
+    const inFase = opportunitaAnno.filter((o: OpportunitaDTO) => o.fase === fase);
     return {
       fase,
       quantita: inFase.length,
@@ -108,7 +133,7 @@ export async function kpi(req: Request, res: Response) {
     };
   });
   const offertePerStato = STATI_OFFERTA.map((stato) => {
-    const inStato = offerte.filter((o: OffertaDTO) => o.stato === stato);
+    const inStato = offerteAnno.filter((o: OffertaDTO) => o.stato === stato);
     return {
       stato,
       quantita: inStato.length,
@@ -116,17 +141,17 @@ export async function kpi(req: Request, res: Response) {
     };
   });
 
-  const opportunitaAperte = opportunita.filter((o) => o.fase !== "Chiuso");
+  const opportunitaAperte = opportunitaAnno.filter((o) => o.fase !== "Chiuso");
   const valorePipeline = opportunitaAperte.reduce(
     (somma, o) => somma + o.valore,
     0
   );
   const emailElaborate =
-    offerte.length + opportunita.length + approvazioni.length;
+    offerteAnno.length + opportunitaAnno.length + approvazioniAnno.length;
   const oreRisparmiate = Math.round(
-    offerte.length * ORE_OFFERTA +
-      opportunita.length * ORE_OPPORTUNITA +
-      approvazioni.length * ORE_APPROVAZIONE
+    offerteAnno.length * ORE_OFFERTA +
+      opportunitaAnno.length * ORE_OPPORTUNITA +
+      approvazioniAnno.length * ORE_APPROVAZIONE
   );
 
   const attivita: { testo: string; tempo: string }[] = [];
@@ -166,13 +191,14 @@ export async function kpi(req: Request, res: Response) {
 
   res.json({
     anno,
+    anni: [...anni].sort((a, b) => a - b).slice(-5),
     metriche: {
       emailElaborate: {
         valore: emailElaborate,
         delta: deltaMensile(elementiMese, meseOggi),
       },
       offerteGenerate: {
-        valore: offerte.length,
+        valore: offerteAnno.length,
         delta: deltaMensile(offerteMese, meseOggi),
       },
       opportunitaAperte: {
@@ -191,6 +217,11 @@ export async function kpi(req: Request, res: Response) {
     andamento,
     pipeline,
     offertePerStato,
+    // Valore delle opportunità create in ciascun mese (cascata "risultato").
+    valoriMensili: MESI.map((mese, i) => ({
+      mese,
+      valore: Math.round(pipelineMese[i]),
+    })),
     // Campo legacy: mantiene compatibile il frontend già deployato mentre
     // backend e frontend si aggiornano in momenti diversi (Vercel vs Render).
     oreMensili: andamento.map(({ mese, ore }) => ({ mese, valore: ore })),
