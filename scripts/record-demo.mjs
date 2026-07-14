@@ -173,6 +173,65 @@ const clicca = async (sel, opts) => {
   await page.locator(sel).first().click();
 };
 
+// La casella reale richiede Gmail collegato: per la scena Inbox si inietta
+// una lista realistica via intercettazione. Analisi e offerta restano AI vera.
+const EMAILS = [
+  {
+    id: "m1",
+    mittente: "Rossi S.p.A.",
+    mittenteEmail: "acquisti@rossispa.it",
+    oggetto: "Richiesta preventivo fornitura",
+    categoria: "Commerciale",
+    priorita: "Alta",
+    tempo: "5 min fa",
+    corpo:
+      "Buongiorno, siamo interessati a una fornitura di 200 unità del vostro prodotto di punta. Avremmo bisogno di un preventivo dettagliato con tempi di consegna entro fine mese. Restiamo in attesa di un vostro riscontro.",
+  },
+  {
+    id: "m2",
+    mittente: "Bianchi SRL",
+    mittenteEmail: "ordini@bianchisrl.it",
+    oggetto: "Conferma ordine n. 4521",
+    categoria: "Amministrazione",
+    priorita: "Media",
+    tempo: "32 min fa",
+    corpo: "Con la presente confermiamo l'ordine n. 4521 e chiediamo conferma dei tempi di evasione.",
+  },
+  {
+    id: "m3",
+    mittente: "Verdi & Co.",
+    mittenteEmail: "it@verdico.it",
+    oggetto: "Problema accesso area riservata",
+    categoria: "Supporto",
+    priorita: "Alta",
+    tempo: "1 h fa",
+    corpo: "Dal rinnovo delle credenziali non riusciamo più ad accedere all'area riservata. Potete verificare?",
+  },
+  {
+    id: "m4",
+    mittente: "Studio Ferrari",
+    mittenteEmail: "info@studioferrari.it",
+    oggetto: "Revisione offerta 2026-014",
+    categoria: "Offerta",
+    priorita: "Media",
+    tempo: "2 h fa",
+    corpo: "Vi chiediamo una revisione dell'offerta 2026-014 con uno sconto volume sul secondo lotto.",
+  },
+  {
+    id: "m5",
+    mittente: "Gallo Logistica",
+    mittenteEmail: "direzione@gallologistica.it",
+    oggetto: "Disponibilità incontro commerciale",
+    categoria: "Commerciale",
+    priorita: "Bassa",
+    tempo: "4 h fa",
+    corpo: "Saremmo lieti di fissare un incontro per discutere una possibile collaborazione sui trasporti del nord Italia.",
+  },
+];
+await page.route("**/api/inbox", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(EMAILS) })
+);
+
 // 1) Landing.
 await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
 await page.mouse.move(640, 300, { steps: 20 });
@@ -224,21 +283,40 @@ await attesa(1100);
 await page.mouse.wheel(0, -520);
 await attesa(800);
 
-// 4) CRM kanban.
+// 4) Inbox: automazione AI reale (analisi email → offerta generata → crea).
+await clicca("a[href='/app/inbox']");
+await page.waitForURL("**/app/inbox");
+await page.waitForSelector("text=Richiesta preventivo fornitura");
+await attesa(1300);
+await clicca("text=Richiesta preventivo fornitura");
+await page.waitForSelector("text=Analizza con AI");
+await attesa(900);
+await clicca("button:has-text('Analizza con AI')");
+await page.waitForSelector("text=Analisi AI", { timeout: 40000 });
+await attesa(1600);
+await clicca("button:has-text('Genera offerta con AI')");
+await page.waitForSelector("button:has-text('Crea offerta')", { timeout: 60000 });
+await attesa(1700);
+await clicca("button:has-text('Crea offerta')");
+await attesa(1400);
+await page.keyboard.press("Escape");
+await attesa(600);
+
+// 5) CRM kanban.
 await clicca("a[href='/app/crm']");
 await page.waitForURL("**/app/crm");
 await page.waitForSelector("text=Rossi S.p.A.");
-await attesa(1600);
+await attesa(1500);
 await page.mouse.wheel(0, 250);
-await attesa(900);
+await attesa(800);
 
-// 5) Offerte.
+// 6) Offerte: in elenco c'è anche l'offerta appena creata dall'AI.
 await clicca("a[href='/app/offerte']");
 await page.waitForURL("**/app/offerte");
 await page.waitForSelector("td:has-text('2026-001')");
-await attesa(1600);
+await attesa(1400);
 
-// 6) Assistente AI: domanda con risposta reale in streaming.
+// 7) Assistente AI: domanda con risposta reale in streaming.
 await clicca("button[aria-label='Apri assistente']");
 await attesa(900);
 await clicca("textarea[aria-label='Scrivi un messaggio all\\'assistente']");
@@ -248,11 +326,11 @@ await page.keyboard.type("Analizza la mia pipeline e dimmi le priorità", {
 await attesa(300);
 await page.keyboard.press("Enter");
 // Lascia scorrere lo streaming.
-await attesa(9000);
+await attesa(7500);
 await clicca("button[aria-label='Chiudi assistente']");
 await attesa(500);
 
-// 7) Chiusura sulla dashboard.
+// 8) Chiusura sulla dashboard.
 await clicca("a[href='/app']");
 await page.waitForSelector("text=Valore pipeline");
 await attesa(2200);

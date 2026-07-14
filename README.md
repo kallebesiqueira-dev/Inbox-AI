@@ -50,7 +50,8 @@ rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'
 ![Inbox AI in azione](docs/walkthrough.gif)
 
 > Dalla landing all'accesso, alla **dashboard direzionale** con filtro per anno e
-> grafici in tempo reale, al **CRM**, alle **offerte** e all'**assistente AI in streaming**.
+> grafici in tempo reale, all'**automazione AI** (analisi email → offerta generata →
+> creazione), al **CRM**, alle **offerte** e all'**assistente AI in streaming**.
 
 ### Dashboard direzionale
 
