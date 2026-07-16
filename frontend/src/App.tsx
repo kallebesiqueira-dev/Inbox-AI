@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PublicLayout } from "@/components/marketing/PublicLayout";
+import { Toaster } from "@/components/ui/toast";
 
 // Caricamento lazy delle pagine: ognuna diventa un chunk separato, scaricato
 // solo quando serve. Riduce nettamente il bundle iniziale.
@@ -54,6 +55,8 @@ function Caricamento() {
 export default function App() {
   return (
     <Suspense fallback={<Caricamento />}>
+      {/* Unico Toaster globale: i toast sopravvivono ai cambi di rotta/layout. */}
+      <Toaster />
       <Routes>
         {/* Sito pubblico di presentazione */}
         <Route element={<PublicLayout />}>

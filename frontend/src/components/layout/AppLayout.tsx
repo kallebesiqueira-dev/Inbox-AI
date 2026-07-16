@@ -6,7 +6,6 @@ import { Topbar } from "./Topbar";
 import { CommandPaletteProvider } from "@/components/command/CommandPalette";
 import { NotificationsProvider } from "@/components/notifications/Notifications";
 import { ChatWidget } from "@/components/chat/ChatWidget";
-import { Toaster } from "@/components/ui/toast";
 
 export function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -29,7 +28,6 @@ export function AppLayout() {
           </div>
         </div>
         <ChatWidget />
-        <Toaster />
       </NotificationsProvider>
     </CommandPaletteProvider>
   );

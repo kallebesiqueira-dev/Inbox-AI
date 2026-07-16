@@ -18,6 +18,7 @@
 - [Panoramica](#panoramica)
 - [Demo](#demo)
 - [Moduli](#moduli)
+- [Piani e pagamenti (Stripe)](#piani-e-pagamenti-stripe)
 - [Stack tecnologico](#stack-tecnologico)
 - [Architettura](#architettura) · [Diagrammi UML](docs/ARCHITECTURE.md)
 - [Astrazione AI](#astrazione-ai)
@@ -42,8 +43,9 @@ L'interfaccia è interamente in **italiano** e segue la palette **Deep Petroleum
 resa sobria e professionale.
 
 Oltre all'area di lavoro autenticata è presente un **sito pubblico** di presentazione
-(landing, funzionalità e **documentazione con tutorial**). Dentro l'app, una **ricerca
-rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche *toast* velocizzano l'uso quotidiano.
+(landing con **piani di abbonamento**, funzionalità e **documentazione con tutorial**).
+Dentro l'app, una **ricerca rapida** (Ctrl/⌘K), un **centro notifiche** e notifiche
+*toast* velocizzano l'uso quotidiano.
 
 ## Demo
 
@@ -81,6 +83,25 @@ crei un'opportunità nel CRM.
 | **Cestino**      | Gli elementi eliminati finiscono nel cestino (soft delete): **ripristinabili** o eliminabili definitivamente. |
 | **Impostazioni** | Foto profilo, dati dell'organizzazione e configurazione delle automazioni email. |
 
+## Piani e pagamenti (Stripe)
+
+La landing espone tre piani di abbonamento (**Base**, **Professionale**,
+**Enterprise**) con checkout gestito da **Stripe Checkout** (pagina di pagamento
+ospitata — nessun dato di carta transita dal backend).
+
+![Piani di abbonamento](docs/screenshots/prezzi.png)
+
+- **Modalità demo (default):** senza chiavi Stripe configurate l'endpoint
+  `POST /api/billing/checkout` risponde `{ "demo": true }` e la landing invita
+  alla registrazione senza avviare pagamenti.
+- **Attivazione reale:** impostare `STRIPE_SECRET_KEY` e i price ID
+  (`STRIPE_PRICE_BASE`, `STRIPE_PRICE_PRO`) creati nella dashboard Stripe
+  (Prodotti → prezzo ricorrente). Da quel momento il pulsante "Attiva il piano"
+  reindirizza alla pagina di pagamento Stripe (integrazione via API REST,
+  nessuna dipendenza aggiuntiva).
+- `STRIPE_WEBHOOK_SECRET` è già previsto in configurazione per la futura
+  gestione degli eventi di abbonamento (rinnovi, cancellazioni).
+
 ## Stack tecnologico
 
 | Livello   | Tecnologie                                                  |
@@ -110,7 +131,7 @@ crei un'opportunità nel CRM.
 ├── backend/               # Backend Node + Express
 │   └── src/
 │       ├── config/        # env (validazione zod), connessione DB
-│       ├── controllers/   # auth, crud, ai, gmail, dashboard, inbox, notifiche
+│       ├── controllers/   # auth, crud, ai, gmail, dashboard, inbox, notifiche, billing
 │       ├── middleware/    # auth, rate limiting, gestione errori
 │       ├── models/        # User, Offerta, Opportunità, Approvazione, RevokedToken, Contatore
 │       ├── routes/        # router REST sotto /api
@@ -171,6 +192,10 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `GOOGLE_CLIENT_SECRET`  | Backend  | Credenziale Google (collegamento Gmail). |
 | `GMAIL_APP_USER`        | Backend  | Account Gmail per le email di sistema (reset password). |
 | `GMAIL_APP_PASSWORD`    | Backend  | App password Gmail per l'SMTP. |
+| `STRIPE_SECRET_KEY`     | Backend  | Chiave segreta Stripe. Assente = checkout in modalità demo. |
+| `STRIPE_PRICE_BASE`     | Backend  | Price ID Stripe del piano Base (`price_...`). |
+| `STRIPE_PRICE_PRO`      | Backend  | Price ID Stripe del piano Professionale (`price_...`). |
+| `STRIPE_WEBHOOK_SECRET` | Backend  | Firma dei webhook Stripe (gestione eventi futura). |
 | `AI_PROVIDER`           | Backend  | Provider AI astratto: `default` (euristico) o `groq`. |
 | `AI_API_KEY`            | Backend  | Chiave del provider AI (mai esposta al client). |
 | `AI_MODEL`              | Backend  | Modello del provider AI (opzionale; per Groq default `llama-3.3-70b-versatile`). |

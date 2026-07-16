@@ -47,6 +47,7 @@ flowchart LR
     GMAIL["Gmail API<br/>OAuth2 · lettura + invio"]
     SMTP["SMTP<br/>email reset password"]
     GSI["Google Identity<br/>accesso con Google"]
+    STRIPE["Stripe Checkout<br/>abbonamenti (demo senza chiavi)"]
 
     SPA -- "HTTPS /api<br/>cookie HttpOnly + X-CSRF-Token" --> API
     CDN --> SPA
@@ -56,6 +57,7 @@ flowchart LR
     AI --> GROQ
     API --> GMAIL
     API --> SMTP
+    API --> STRIPE
 
     subgraph CI["GitHub Actions"]
         PIPE["build + lint + test<br/>→ deploy hook Render"]

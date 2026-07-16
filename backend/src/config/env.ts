@@ -28,6 +28,13 @@ const schema = z.object({
   // Impostata automaticamente da Render con l'URL pubblico del servizio.
   // Se presente, il server si auto-pinga per evitare lo spin-down del piano free.
   RENDER_EXTERNAL_URL: z.string().optional(),
+  // Pagamenti Stripe (opzionali): senza chiavi il checkout resta in modalità demo.
+  STRIPE_SECRET_KEY: z.string().optional(),
+  // Price ID degli abbonamenti (dashboard Stripe → Prodotti), es. "price_...".
+  STRIPE_PRICE_BASE: z.string().optional(),
+  STRIPE_PRICE_PRO: z.string().optional(),
+  // Firma dei webhook Stripe (per la futura gestione degli eventi di abbonamento).
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

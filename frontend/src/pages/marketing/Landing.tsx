@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sparkles,
   Inbox,
@@ -10,7 +11,12 @@ import {
   ShieldCheck,
   Zap,
   Clock,
+  Check,
+  Loader2,
 } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+import { toast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 
 const moduli = [
   { icon: Sparkles, titolo: "Assistente AI", testo: "Chat conversazionale in tempo reale per gestire il lavoro quotidiano." },
@@ -21,6 +27,54 @@ const moduli = [
   { icon: LayoutDashboard, titolo: "Dashboard", testo: "KPI operativi e attività recenti in un colpo d'occhio." },
 ];
 
+const piani = [
+  {
+    id: "base" as const,
+    nome: "Base",
+    prezzo: "29",
+    periodo: "/mese",
+    descrizione: "Per professionisti e piccoli team che iniziano ad automatizzare.",
+    voci: [
+      "1 casella Gmail collegata",
+      "Analisi AI delle email",
+      "50 offerte generate al mese",
+      "CRM e approvazioni",
+      "Dashboard direzionale",
+    ],
+    evidenza: false,
+  },
+  {
+    id: "pro" as const,
+    nome: "Professionale",
+    prezzo: "79",
+    periodo: "/mese",
+    descrizione: "Per aziende che vogliono l'automazione su tutto il flusso commerciale.",
+    voci: [
+      "Caselle email illimitate",
+      "Offerte e risposte AI illimitate",
+      "Assistente AI in streaming",
+      "Invio email dal CRM",
+      "Supporto prioritario",
+    ],
+    evidenza: true,
+  },
+  {
+    id: "enterprise" as const,
+    nome: "Enterprise",
+    prezzo: "Su misura",
+    periodo: "",
+    descrizione: "Per organizzazioni con esigenze di integrazione e volumi elevati.",
+    voci: [
+      "Onboarding dedicato",
+      "Integrazioni personalizzate",
+      "SLA e ambienti dedicati",
+      "Controlli di sicurezza avanzati",
+      "Fatturazione centralizzata",
+    ],
+    evidenza: false,
+  },
+];
+
 const vantaggi = [
   { icon: Zap, titolo: "Automazione concreta", testo: "Riduci il lavoro manuale ripetitivo su email, offerte e attività." },
   { icon: ShieldCheck, titolo: "Sicuro per impostazione", testo: "Sessioni protette, CSRF e provider AI sempre lato server." },
@@ -28,6 +82,42 @@ const vantaggi = [
 ];
 
 export function Landing() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [caricamento, setCaricamento] = useState<string | null>(null);
+
+  // Scroll morbido alle ancore (es. /#prezzi dal menu).
+  useEffect(() => {
+    if (!location.hash) return;
+    const el = document.getElementById(location.hash.slice(1));
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash]);
+
+  // Avvia il checkout: con Stripe configurato reindirizza alla pagina di
+  // pagamento; in modalità demo porta alla registrazione.
+  const attivaPiano = async (piano: "base" | "pro") => {
+    setCaricamento(piano);
+    try {
+      const esito = await apiFetch<{ url?: string; demo?: boolean }>(
+        "/billing/checkout",
+        { method: "POST", body: JSON.stringify({ piano }) }
+      );
+      if (esito.url) {
+        window.location.href = esito.url;
+        return;
+      }
+      toast(
+        "Versione dimostrativa: i pagamenti non sono ancora attivi. Registrati e prova la piattaforma.",
+        "info"
+      );
+      navigate("/login");
+    } catch {
+      toast("Impossibile avviare il pagamento. Riprova più tardi.", "errore");
+    } finally {
+      setCaricamento(null);
+    }
+  };
+
   return (
     <>
       {/* Hero */}
@@ -98,6 +188,96 @@ export function Landing() {
               <p className="mt-1 text-sm text-muted-foreground">{testo}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Prezzi */}
+      <section id="prezzi" className="border-y border-border bg-surface/40">
+        <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-semibold tracking-tight">
+              Piani semplici, senza sorprese
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+              Scegli il piano adatto al tuo team: puoi cambiare o disdire in
+              qualsiasi momento.
+            </p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {piani.map((p) => (
+              <div
+                key={p.id}
+                className={cn(
+                  "relative flex flex-col rounded-xl border bg-card p-6",
+                  p.evidenza
+                    ? "border-primary shadow-card md:-my-2 md:py-8"
+                    : "border-border"
+                )}
+              >
+                {p.evidenza && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground">
+                    Consigliato
+                  </span>
+                )}
+                <h3 className="font-semibold">{p.nome}</h3>
+                <p className="mt-1 min-h-10 text-sm text-muted-foreground">
+                  {p.descrizione}
+                </p>
+                <p className="mt-4">
+                  {p.periodo ? (
+                    <>
+                      <span className="text-4xl font-semibold tracking-tight">
+                        €{p.prezzo}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {p.periodo}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-3xl font-semibold tracking-tight">
+                      {p.prezzo}
+                    </span>
+                  )}
+                </p>
+                <ul className="mt-5 flex-1 space-y-2.5">
+                  {p.voci.map((v) => (
+                    <li key={v} className="flex items-start gap-2 text-sm">
+                      <Check className="mt-0.5 size-4 shrink-0 text-secondary" />
+                      {v}
+                    </li>
+                  ))}
+                </ul>
+                {p.id === "enterprise" ? (
+                  <Link
+                    to="/login"
+                    className="mt-6 inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface"
+                  >
+                    Richiedi una demo
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => attivaPiano(p.id)}
+                    disabled={caricamento !== null}
+                    className={cn(
+                      "mt-6 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60",
+                      p.evidenza
+                        ? "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90"
+                        : "border border-border bg-card hover:bg-surface"
+                    )}
+                  >
+                    {caricamento === p.id && (
+                      <Loader2 className="size-4 animate-spin" />
+                    )}
+                    Attiva il piano
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Prezzi IVA esclusa. Il pagamento è gestito in modo sicuro da Stripe.
+          </p>
         </div>
       </section>
 

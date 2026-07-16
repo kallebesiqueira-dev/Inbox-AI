@@ -20,6 +20,12 @@ export function PublicLayout() {
             <NavLink to="/funzionalita" className={link}>
               Funzionalità
             </NavLink>
+            <Link
+              to="/#prezzi"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Prezzi
+            </Link>
             <NavLink to="/documentazione" className={link}>
               Documentazione
             </NavLink>
@@ -55,6 +61,9 @@ export function PublicLayout() {
           <nav className="flex items-center gap-6">
             <Link to="/funzionalita" className="hover:text-foreground">
               Funzionalità
+            </Link>
+            <Link to="/#prezzi" className="hover:text-foreground">
+              Prezzi
             </Link>
             <Link to="/documentazione" className="hover:text-foreground">
               Documentazione

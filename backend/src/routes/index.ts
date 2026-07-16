@@ -8,6 +8,7 @@ import {
   generaRisposta,
 } from "../controllers/ai.controller.js";
 import { kpi } from "../controllers/dashboard.controller.js";
+import { checkout } from "../controllers/billing.controller.js";
 import { elenca as elencaInbox } from "../controllers/inbox.controller.js";
 import { elenca as elencaNotifiche } from "../controllers/notifiche.controller.js";
 import {
@@ -17,7 +18,7 @@ import {
   invia as inviaGmail,
 } from "../controllers/gmail.controller.js";
 import { requireAuth, csrfProtection } from "../middleware/auth.js";
-import { aiLimiter, inboxLimiter } from "../middleware/rateLimit.js";
+import { aiLimiter, inboxLimiter, authLimiter } from "../middleware/rateLimit.js";
 import { ah } from "../utils/asyncHandler.js";
 import authRouter from "./auth.routes.js";
 import offerteRouter from "./offerte.routes.js";
@@ -61,6 +62,10 @@ router.post("/ai/analizza-email", auth, csrfProtection, aiLimiter, ah(analizzaEm
 router.post("/ai/genera-offerta", auth, csrfProtection, aiLimiter, ah(generaOfferta));
 router.post("/ai/genera-risposta", auth, csrfProtection, aiLimiter, ah(generaRisposta));
 router.post("/ai/chat", auth, csrfProtection, aiLimiter, ah(chat));
+
+// Abbonamenti: avvio del checkout Stripe dalla landing (pubblico, rate limit).
+// Senza chiavi Stripe configurate risponde in modalità demo.
+router.post("/billing/checkout", authLimiter, ah(checkout));
 
 // KPI, serie mensile e attività della dashboard (protetti)
 router.get("/dashboard/kpi", auth, ah(kpi));
