@@ -48,9 +48,7 @@ services:
       # Stripe (pagamenti): senza chiavi il checkout resta in modalità demo.
       - key: STRIPE_SECRET_KEY
         sync: false
-      - key: STRIPE_PRICE_BASE
-        sync: false
-      - key: STRIPE_PRICE_PRO
+      - key: STRIPE_PRICE_ID
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false

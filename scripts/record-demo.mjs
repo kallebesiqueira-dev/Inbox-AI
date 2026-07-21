@@ -232,7 +232,7 @@ await page.route("**/api/inbox", (route) =>
   route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(EMAILS) })
 );
 
-// 1) Landing.
+// 1) Landing: hero, moduli e la sezione prezzi (piano unico + prova gratuita).
 await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
 await page.mouse.move(640, 300, { steps: 20 });
 await attesa(1400);
@@ -240,8 +240,14 @@ await page.mouse.wheel(0, 500);
 await attesa(900);
 await page.mouse.wheel(0, 500);
 await attesa(900);
-await page.mouse.wheel(0, -1000);
-await attesa(700);
+await clicca("header a[href='/#prezzi']");
+await attesa(1600);
+await muovi("text=14 giorni di prova gratuita");
+await attesa(1000);
+await muovi("button:has-text('Inizia la prova gratuita')");
+await attesa(1200);
+await page.mouse.wheel(0, -4000);
+await attesa(800);
 
 // 2) Login con digitazione visibile.
 await clicca("a[href='/login']");

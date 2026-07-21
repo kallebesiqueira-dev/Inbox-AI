@@ -51,8 +51,9 @@ Dentro l'app, una **ricerca rapida** (Ctrl/⌘K), un **centro notifiche** e noti
 
 ![Inbox AI in azione](docs/walkthrough.gif)
 
-> Dalla landing all'accesso, alla **dashboard direzionale** con filtro per anno e
-> grafici in tempo reale, all'**automazione AI** (analisi email → offerta generata →
+> Dalla landing con il **piano unico** (€7/mese, 14 giorni di prova gratuita)
+> all'accesso, alla **dashboard direzionale** con filtro per anno e grafici in
+> tempo reale, all'**automazione AI** (analisi email → offerta generata →
 > creazione), al **CRM**, alle **offerte** e all'**assistente AI in streaming**.
 
 ### Dashboard direzionale
@@ -85,18 +86,21 @@ crei un'opportunità nel CRM.
 
 ## Piani e pagamenti (Stripe)
 
-La landing espone tre piani di abbonamento (**Base**, **Professionale**,
-**Enterprise**) con checkout gestito da **Stripe Checkout** (pagina di pagamento
-ospitata — nessun dato di carta transita dal backend).
+La landing espone un **piano unico da €7/mese per utente** — tutto incluso,
+volutamente sotto la media di mercato degli strumenti che sostituisce (€25+/mese)
+— con **14 giorni di prova gratuita** e garanzia soddisfatti o rimborsati. Il
+checkout è gestito da **Stripe Checkout** (pagina di pagamento ospitata — nessun
+dato di carta transita dal backend) e la prova è applicata da Stripe
+(`trial_period_days=14`: l'addebito parte solo alla fine del periodo di prova).
 
 ![Piani di abbonamento](docs/screenshots/prezzi.png)
 
 - **Modalità demo (default):** senza chiavi Stripe configurate l'endpoint
   `POST /api/billing/checkout` risponde `{ "demo": true }` e la landing invita
   alla registrazione senza avviare pagamenti.
-- **Attivazione reale:** impostare `STRIPE_SECRET_KEY` e i price ID
-  (`STRIPE_PRICE_BASE`, `STRIPE_PRICE_PRO`) creati nella dashboard Stripe
-  (Prodotti → prezzo ricorrente). Da quel momento il pulsante "Attiva il piano"
+- **Attivazione reale:** impostare `STRIPE_SECRET_KEY` e il price ID
+  (`STRIPE_PRICE_ID`) creato nella dashboard Stripe (Prodotti → prezzo
+  ricorrente €7/mese). Da quel momento il pulsante "Inizia la prova gratuita"
   reindirizza alla pagina di pagamento Stripe (integrazione via API REST,
   nessuna dipendenza aggiuntiva).
 - `STRIPE_WEBHOOK_SECRET` è già previsto in configurazione per la futura
@@ -193,8 +197,7 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `GMAIL_APP_USER`        | Backend  | Account Gmail per le email di sistema (reset password). |
 | `GMAIL_APP_PASSWORD`    | Backend  | App password Gmail per l'SMTP. |
 | `STRIPE_SECRET_KEY`     | Backend  | Chiave segreta Stripe. Assente = checkout in modalità demo. |
-| `STRIPE_PRICE_BASE`     | Backend  | Price ID Stripe del piano Base (`price_...`). |
-| `STRIPE_PRICE_PRO`      | Backend  | Price ID Stripe del piano Professionale (`price_...`). |
+| `STRIPE_PRICE_ID`       | Backend  | Price ID Stripe del piano unico €7/mese (`price_...`). |
 | `STRIPE_WEBHOOK_SECRET` | Backend  | Firma dei webhook Stripe (gestione eventi futura). |
 | `AI_PROVIDER`           | Backend  | Provider AI astratto: `default` (euristico) o `groq`. |
 | `AI_API_KEY`            | Backend  | Chiave del provider AI (mai esposta al client). |

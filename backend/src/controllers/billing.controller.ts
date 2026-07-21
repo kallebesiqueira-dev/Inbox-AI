@@ -3,15 +3,16 @@ import { z } from "zod";
 import { env } from "../config/env.js";
 
 /**
- * Checkout degli abbonamenti tramite Stripe Checkout (pagina ospitata).
+ * Checkout dell'abbonamento tramite Stripe Checkout (pagina ospitata).
  *
- * Senza chiavi Stripe configurate risponde `{ demo: true }`: la landing mostra
- * i piani ma non avvia pagamenti. Quando `STRIPE_SECRET_KEY` e i price ID sono
+ * Piano unico (€7/mese) con 14 giorni di prova gratuita. Senza chiavi Stripe
+ * configurate risponde `{ demo: true }`: la landing mostra il prezzo ma non
+ * avvia pagamenti. Quando `STRIPE_SECRET_KEY` e `STRIPE_PRICE_ID` sono
  * impostati, crea una sessione reale e restituisce l'URL a cui reindirizzare.
  * Nessuna dipendenza: si usa l'API REST di Stripe (form-encoded) via fetch.
  */
 
-const schema = z.object({ piano: z.enum(["base", "pro"]) });
+const schema = z.object({ piano: z.literal("unico") });
 
 /** Prima origine di CLIENT_URL (può essere una lista separata da virgole). */
 function origineFrontend(): string {
@@ -23,8 +24,7 @@ export async function checkout(req: Request, res: Response) {
   if (!parsed.success) {
     return res.status(400).json({ messaggio: "Piano non valido." });
   }
-  const price =
-    parsed.data.piano === "base" ? env.STRIPE_PRICE_BASE : env.STRIPE_PRICE_PRO;
+  const price = env.STRIPE_PRICE_ID;
 
   // Modalità demo: chiavi non configurate → nessun pagamento reale.
   if (!env.STRIPE_SECRET_KEY || !price) {
@@ -36,6 +36,9 @@ export async function checkout(req: Request, res: Response) {
     mode: "subscription",
     "line_items[0][price]": price,
     "line_items[0][quantity]": "1",
+    // 14 giorni di prova gratuita gestiti da Stripe: l'addebito parte solo
+    // alla fine del periodo di prova.
+    "subscription_data[trial_period_days]": "14",
     success_url: `${base}/login?abbonamento=attivo`,
     cancel_url: `${base}/#prezzi`,
   });

@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
 
 const moduli = [
   { icon: Sparkles, titolo: "Assistente AI", testo: "Chat conversazionale in tempo reale per gestire il lavoro quotidiano." },
@@ -27,52 +26,15 @@ const moduli = [
   { icon: LayoutDashboard, titolo: "Dashboard", testo: "KPI operativi e attività recenti in un colpo d'occhio." },
 ];
 
-const piani = [
-  {
-    id: "base" as const,
-    nome: "Base",
-    prezzo: "29",
-    periodo: "/mese",
-    descrizione: "Per professionisti e piccoli team che iniziano ad automatizzare.",
-    voci: [
-      "1 casella Gmail collegata",
-      "Analisi AI delle email",
-      "50 offerte generate al mese",
-      "CRM e approvazioni",
-      "Dashboard direzionale",
-    ],
-    evidenza: false,
-  },
-  {
-    id: "pro" as const,
-    nome: "Professionale",
-    prezzo: "79",
-    periodo: "/mese",
-    descrizione: "Per aziende che vogliono l'automazione su tutto il flusso commerciale.",
-    voci: [
-      "Caselle email illimitate",
-      "Offerte e risposte AI illimitate",
-      "Assistente AI in streaming",
-      "Invio email dal CRM",
-      "Supporto prioritario",
-    ],
-    evidenza: true,
-  },
-  {
-    id: "enterprise" as const,
-    nome: "Enterprise",
-    prezzo: "Su misura",
-    periodo: "",
-    descrizione: "Per organizzazioni con esigenze di integrazione e volumi elevati.",
-    voci: [
-      "Onboarding dedicato",
-      "Integrazioni personalizzate",
-      "SLA e ambienti dedicati",
-      "Controlli di sicurezza avanzati",
-      "Fatturazione centralizzata",
-    ],
-    evidenza: false,
-  },
+// Un unico piano, tutto incluso: nessuna scelta da fare, nessuna funzione bloccata.
+const incluso = [
+  "Casella Gmail collegata con analisi AI delle email",
+  "Offerte e risposte generate dall'AI, senza limiti",
+  "Assistente AI in streaming, sempre disponibile",
+  "CRM con pipeline e invio email integrato",
+  "Approvazioni con supervisione umana",
+  "Dashboard direzionale con KPI reali",
+  "Cestino con ripristino ed esportazione PDF",
 ];
 
 const vantaggi = [
@@ -84,7 +46,7 @@ const vantaggi = [
 export function Landing() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [caricamento, setCaricamento] = useState<string | null>(null);
+  const [caricamento, setCaricamento] = useState(false);
 
   // Scroll morbido alle ancore (es. /#prezzi dal menu).
   useEffect(() => {
@@ -94,13 +56,13 @@ export function Landing() {
   }, [location.hash]);
 
   // Avvia il checkout: con Stripe configurato reindirizza alla pagina di
-  // pagamento; in modalità demo porta alla registrazione.
-  const attivaPiano = async (piano: "base" | "pro") => {
-    setCaricamento(piano);
+  // pagamento (con 14 giorni di prova); in modalità demo porta alla registrazione.
+  const attivaAbbonamento = async () => {
+    setCaricamento(true);
     try {
       const esito = await apiFetch<{ url?: string; demo?: boolean }>(
         "/billing/checkout",
-        { method: "POST", body: JSON.stringify({ piano }) }
+        { method: "POST", body: JSON.stringify({ piano: "unico" }) }
       );
       if (esito.url) {
         window.location.href = esito.url;
@@ -114,7 +76,7 @@ export function Landing() {
     } catch {
       toast("Impossibile avviare il pagamento. Riprova più tardi.", "errore");
     } finally {
-      setCaricamento(null);
+      setCaricamento(false);
     }
   };
 
@@ -196,84 +158,64 @@ export function Landing() {
         <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6">
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-semibold tracking-tight">
-              Piani semplici, senza sorprese
+              Un prezzo unico, tutto incluso
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              Scegli il piano adatto al tuo team: puoi cambiare o disdire in
-              qualsiasi momento.
+              Nessun piano da confrontare, nessuna funzione bloccata: ogni
+              modulo di Inbox AI è compreso, a una frazione del costo degli
+              strumenti che sostituisce.
             </p>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
-            {piani.map((p) => (
-              <div
-                key={p.id}
-                className={cn(
-                  "relative flex flex-col rounded-xl border bg-card p-6",
-                  p.evidenza
-                    ? "border-primary shadow-card md:-my-2 md:py-8"
-                    : "border-border"
-                )}
+          <div className="mx-auto grid max-w-4xl overflow-hidden rounded-2xl border border-primary bg-card shadow-card md:grid-cols-5">
+            {/* Cosa è incluso */}
+            <div className="p-8 md:col-span-3">
+              <h3 className="font-semibold">Tutto Inbox AI, senza limiti</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Un solo abbonamento sostituisce assistente email, generatore di
+                offerte e CRM — strumenti che, separati, superano in media i
+                €25 al mese.
+              </p>
+              <ul className="mt-6 grid gap-2.5 sm:grid-cols-1">
+                {incluso.map((v) => (
+                  <li key={v} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 size-4 shrink-0 text-secondary" />
+                    {v}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Prezzo e prova gratuita */}
+            <div className="flex flex-col justify-center gap-4 border-t border-border bg-primary p-8 text-primary-foreground md:col-span-2 md:border-l md:border-t-0">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-semibold">
+                <Clock className="size-3.5" />
+                14 giorni di prova gratuita
+              </span>
+              <p>
+                <span className="text-5xl font-semibold tracking-tight">€7</span>
+                <span className="text-sm text-primary-foreground/80">
+                  {" "}/mese per utente
+                </span>
+              </p>
+              <ul className="space-y-2 text-sm text-primary-foreground/90">
+                <li className="flex items-start gap-2">
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+                  Soddisfatti o rimborsati: rimborso completo, senza domande
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="mt-0.5 size-4 shrink-0" />
+                  Nessun vincolo: disdici in qualsiasi momento
+                </li>
+              </ul>
+              <button
+                type="button"
+                onClick={attivaAbbonamento}
+                disabled={caricamento}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-background px-5 py-3 text-sm font-medium text-foreground shadow-soft transition-colors hover:bg-surface disabled:opacity-60"
               >
-                {p.evidenza && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground">
-                    Consigliato
-                  </span>
-                )}
-                <h3 className="font-semibold">{p.nome}</h3>
-                <p className="mt-1 min-h-10 text-sm text-muted-foreground">
-                  {p.descrizione}
-                </p>
-                <p className="mt-4">
-                  {p.periodo ? (
-                    <>
-                      <span className="text-4xl font-semibold tracking-tight">
-                        €{p.prezzo}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {p.periodo}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-3xl font-semibold tracking-tight">
-                      {p.prezzo}
-                    </span>
-                  )}
-                </p>
-                <ul className="mt-5 flex-1 space-y-2.5">
-                  {p.voci.map((v) => (
-                    <li key={v} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 size-4 shrink-0 text-secondary" />
-                      {v}
-                    </li>
-                  ))}
-                </ul>
-                {p.id === "enterprise" ? (
-                  <Link
-                    to="/login"
-                    className="mt-6 inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface"
-                  >
-                    Richiedi una demo
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => attivaPiano(p.id)}
-                    disabled={caricamento !== null}
-                    className={cn(
-                      "mt-6 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60",
-                      p.evidenza
-                        ? "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90"
-                        : "border border-border bg-card hover:bg-surface"
-                    )}
-                  >
-                    {caricamento === p.id && (
-                      <Loader2 className="size-4 animate-spin" />
-                    )}
-                    Attiva il piano
-                  </button>
-                )}
-              </div>
-            ))}
+                {caricamento && <Loader2 className="size-4 animate-spin" />}
+                Inizia la prova gratuita
+              </button>
+            </div>
           </div>
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Prezzi IVA esclusa. Il pagamento è gestito in modo sicuro da Stripe.
