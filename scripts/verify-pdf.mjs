@@ -54,10 +54,13 @@ const corpo = [
 // Variante lunga per verificare l'impaginazione multi-pagina
 const corpoLungo = process.argv[3] === "lungo" ? `${corpo}\n\n${corpo}\n\n${corpo}` : corpo;
 
-const creato = await page.evaluate(async (corpo) => {
+// In prod l'API vive su un dominio diverso dal frontend (Render vs Vercel)
+const API = BASE.includes("vercel.app") ? "https://inbox-ai-mwca.onrender.com" : "";
+
+const creato = await page.evaluate(async ({ corpo, api }) => {
   // Il token CSRF vive in memoria nell'app: lo recuperiamo da /auth/me
-  const me = await fetch("/api/auth/me", { credentials: "include" }).then((r) => r.json());
-  const res = await fetch("/api/offerte", {
+  const me = await fetch(`${api}/api/auth/me`, { credentials: "include" }).then((r) => r.json());
+  const res = await fetch(`${api}/api/offerte`, {
     method: "POST",
     credentials: "include",
     headers: { "content-type": "application/json", "X-CSRF-Token": me.csrfToken ?? "" },
@@ -74,7 +77,7 @@ const creato = await page.evaluate(async (corpo) => {
     }),
   });
   return { status: res.status, body: await res.json().catch(() => null) };
-}, corpoLungo);
+}, { corpo: corpoLungo, api: API });
 console.log("2) offerta creata via API:", creato.status);
 if (creato.status >= 400) {
   console.log(JSON.stringify(creato.body));
