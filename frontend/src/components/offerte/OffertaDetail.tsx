@@ -22,7 +22,8 @@ export function OffertaDetail({
     setScaricando(true);
     try {
       await generaPdfOfferta(offerta);
-    } catch {
+    } catch (errore) {
+      console.error("Generazione PDF fallita:", errore);
       toast("Impossibile generare il PDF. Riprova.", "errore");
     } finally {
       setScaricando(false);
