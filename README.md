@@ -64,6 +64,14 @@ dati reali dell'utente.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
+### Design responsive
+
+L'intera applicazione è **responsive**: la stessa dashboard si adatta dal desktop
+allo smartphone (KPI a due colonne, grafici impilati, navigazione mobile dedicata),
+senza perdere funzionalità.
+
+![Inbox AI responsive: desktop e mobile](docs/screenshots/responsive.png)
+
 ### Automazione AI — analizza l'email, genera l'offerta, crea l'opportunità
 
 Apri un'email reale (Gmail) e lascia che l'AI la classifichi, generi un'offerta o
@@ -218,6 +226,7 @@ Un unico file `.env` nella radice del progetto serve sia il frontend (Vite) sia 
 | `node scripts/verify-prod-e2e.mjs` | Verifica end-to-end dell'ambiente di produzione. |
 | `node scripts/cleanup-test-users.mjs [--apply]` | Rimuove gli utenti di test creati dalle verifiche. |
 | `node scripts/record-demo.mjs` | Registra il video walkthrough del README (webm → GIF). |
+| `node scripts/responsive-shot.mjs` | Genera la foto responsive (desktop + mobile) del README. |
 
 ## Sicurezza
 
